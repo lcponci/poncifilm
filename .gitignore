@@ -1,0 +1,9 @@
+# File di sistema e temporanei da non salvare
+Thumbs.db
+desktop.ini
+.DS_Store
+__pycache__/
+*.log
+
+# Documenti personali: restano sul computer, non vanno pubblicati
+richiesta-claude-code-cineteca.md

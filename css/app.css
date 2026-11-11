@@ -1,0 +1,501 @@
+/* PonciFilm – aspetto grafico. Pensato prima per iPhone, comodo anche su computer. */
+
+:root {
+  color-scheme: dark;
+  --sfondo: #0e0f11;
+  --superficie: #17191c;
+  --superficie-2: #222429;
+  --bordo: #2b2e34;
+  --testo: #f1f2f4;
+  --testo-2: #a5a9b1;
+  --testo-3: #71767f;
+  --accento: #f2b544;
+  --accento-testo: #1d1503;
+  --pericolo: #ff6b6b;
+  --raggio: 12px;
+  --barra-h: 58px;
+  --sicuro-alto: env(safe-area-inset-top, 0px);
+  --sicuro-basso: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--sfondo);
+  color: var(--testo);
+  font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: .55; }
+img { display: block; }
+h1, h2 { margin: 0; line-height: 1.2; }
+:focus-visible { outline: 2px solid var(--accento); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+.vista-contenitore {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: calc(var(--sicuro-alto) + 12px) 16px calc(var(--barra-h) + var(--sicuro-basso) + 28px);
+}
+
+.intestazione { margin: 4px 0 14px; }
+.intestazione h1 { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+
+.icona { width: 22px; height: 22px; flex: none; }
+
+/* ------------------------------------------------------------- campi e pulsanti */
+
+.campo {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--raggio);
+  background: var(--superficie-2);
+  color: var(--testo);
+  font-size: 16px; /* 16px evita lo zoom automatico dell'iPhone */
+  -webkit-appearance: none;
+  appearance: none;
+}
+.campo::placeholder { color: var(--testo-3); }
+.campo:focus { outline: none; border-color: var(--accento); }
+
+.pulsante {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--raggio);
+  background: var(--accento);
+  color: var(--accento-testo);
+  font-weight: 700;
+  text-align: center;
+}
+.pulsante.secondario { background: var(--superficie-2); color: var(--testo); }
+.pulsante.largo { width: 100%; }
+.pulsante.grande { min-height: 54px; font-size: 17px; }
+.pulsante:active:not(:disabled) { transform: scale(.98); }
+
+.pulsante-testo { background: none; border: 0; padding: 10px 0; font-weight: 600; }
+.pericolo { color: var(--pericolo); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--bordo);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--testo-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+.chip.attivo { background: var(--testo); border-color: var(--testo); color: var(--sfondo); }
+
+.pallino { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+.nota { color: var(--testo-2); font-size: 14px; }
+.nota a, .scheda-info a:not(.pulsante) { color: var(--accento); }
+.errore { color: var(--pericolo); }
+.centrato { display: flex; justify-content: center; margin-top: 20px; }
+
+.vuoto { padding: 48px 16px; text-align: center; color: var(--testo-2); }
+
+.scheda-info {
+  margin-bottom: 16px;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--superficie);
+}
+.scheda-info h2 { font-size: 19px; margin-bottom: 8px; }
+.scheda-info p { margin: 0 0 14px; }
+.scheda-info .campo { margin: 4px 0 12px; }
+.passi { margin: 0 0 14px; padding-left: 20px; color: var(--testo-2); font-size: 14px; }
+.passi li { margin-bottom: 6px; }
+
+/* ------------------------------------------------------------- libreria */
+
+/* Le quattro sezioni stanno sempre tutte sullo schermo: nome sopra, numero sotto. */
+.schede {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin: 14px 0 18px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--superficie);
+}
+.scheda {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding: 7px 2px;
+  border-radius: 10px;
+  color: var(--testo-2);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.scheda.attiva { background: var(--testo); color: var(--sfondo); }
+.scheda .conteggio { margin: 1px 0 0; font-size: 12px; }
+.conteggio { margin-left: 6px; opacity: .65; font-weight: 500; }
+
+.contenuto { margin-top: 14px; }
+.schede + .contenuto { margin-top: 0; }
+
+.gruppo + .gruppo { margin-top: 26px; }
+.titolo-gruppo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.griglia {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 16px 10px;
+}
+@media (min-width: 700px) {
+  .griglia { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 22px 16px; }
+}
+
+.card { display: block; min-width: 0; }
+.card-locandina {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--superficie-2);
+}
+.card-locandina img { width: 100%; height: 100%; object-fit: cover; }
+.segnaposto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  color: var(--testo-2);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+.pallino-card {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, .55);
+}
+.card-loghi { position: absolute; left: 5px; bottom: 5px; display: flex; gap: 4px; }
+.card-loghi .logo { width: 22px; height: 22px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .4); }
+.card-titolo {
+  margin-top: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-sotto { display: flex; flex-wrap: wrap; gap: 0 6px; margin-top: 2px; color: var(--testo-2); font-size: 12px; }
+
+.stelle { color: var(--accento); letter-spacing: 1px; }
+.stelle.piccole { font-size: 11px; letter-spacing: 0; }
+
+/* ------------------------------------------------------------- piattaforme */
+
+.logo { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; }
+.logo-testo {
+  display: inline-grid;
+  place-items: center;
+  background: var(--superficie-2);
+  font-size: 11px;
+  font-weight: 700;
+}
+.piattaforme { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+.piattaforma { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+.gruppo-piattaforme + .gruppo-piattaforme { margin-top: 14px; }
+.gruppo-piattaforme .etichetta { margin-bottom: 8px; }
+.fonte { margin-top: 14px; color: var(--testo-3); font-size: 12px; }
+.fonte a { color: var(--testo-2); text-decoration: underline; }
+
+/* ------------------------------------------------------------- aggiungi */
+
+.risultati { margin-top: 4px; }
+.riga-risultato {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--bordo);
+  background: none;
+  text-align: left;
+}
+.riga-locandina {
+  flex: none;
+  width: 48px;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--superficie-2);
+}
+.riga-locandina img { width: 100%; height: 100%; object-fit: cover; }
+.riga-testo { min-width: 0; }
+.riga-titolo { font-weight: 600; }
+.riga-sotto { color: var(--testo-2); font-size: 14px; }
+.etichetta-stato {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  color: var(--accento);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- pannello dal basso */
+
+.velo { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .6); }
+.foglio {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  max-width: 560px;
+  max-height: 88vh;
+  margin: 0 auto;
+  padding: 10px 16px calc(18px + var(--sicuro-basso));
+  overflow-y: auto;
+  border-radius: 18px 18px 0 0;
+  background: var(--superficie);
+  animation: sali .18s ease-out;
+}
+@keyframes sali { from { transform: translateY(40px); opacity: .4; } }
+.maniglia { width: 40px; height: 5px; margin: 0 auto 14px; border-radius: 3px; background: var(--bordo); }
+
+.anteprima-testa { display: flex; gap: 14px; margin-bottom: 18px; }
+.anteprima-locandina {
+  flex: none;
+  width: 96px;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--superficie-2);
+}
+.anteprima-locandina img { width: 100%; height: 100%; object-fit: cover; }
+.anteprima h2 { font-size: 20px; }
+.anteprima .nota { margin: 4px 0 8px; }
+.trama-breve {
+  margin: 0;
+  color: var(--testo-2);
+  font-size: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.azioni.due { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.azioni .nota { margin: 0 0 12px; }
+
+/* ------------------------------------------------------------- scheda film */
+
+.indietro {
+  position: fixed;
+  top: calc(var(--sicuro-alto) + 10px);
+  left: 12px;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(14, 15, 17, .72);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.film-sfondo {
+  height: 230px;
+  margin: calc(-12px - var(--sicuro-alto)) -16px 0;
+  background: var(--superficie) center top / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent);
+}
+.film-sfondo.senza-immagine { height: calc(70px + var(--sicuro-alto)); background: none; }
+
+.film-testa { position: relative; display: flex; align-items: flex-end; gap: 14px; margin-top: -96px; }
+.film-sfondo.senza-immagine + .film-testa { margin-top: 0; }
+.film-locandina {
+  flex: none;
+  width: 112px;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--superficie-2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+}
+.film-locandina img { width: 100%; height: 100%; object-fit: cover; }
+.film-titoli { min-width: 0; padding-bottom: 2px; }
+.film-titoli h1 { font-size: 23px; font-weight: 800; letter-spacing: -.01em; }
+.titolo-originale { margin: 3px 0 0; color: var(--testo-2); font-size: 14px; font-style: italic; }
+.meta { margin: 5px 0 0; color: var(--testo-2); font-size: 14px; }
+.film-titoli .stelle { display: inline-block; margin-top: 6px; }
+
+.pannello-azioni {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--superficie);
+}
+.etichetta { margin-bottom: 8px; color: var(--testo-3); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.visioni { margin: 0; color: var(--testo-2); font-size: 14px; }
+
+.sezione { margin-top: 28px; }
+.sezione h2 { margin-bottom: 12px; font-size: 18px; font-weight: 700; }
+.trama { margin: 0; color: #d9dbe0; line-height: 1.5; }
+.lingua {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--superficie-2);
+  color: var(--testo-2);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+
+.persone {
+  display: flex;
+  gap: 12px;
+  margin: 0 -16px;
+  padding: 0 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.persone::-webkit-scrollbar { display: none; }
+.persona { flex: none; width: 78px; text-align: center; }
+.foto {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 6px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--superficie-2);
+  color: var(--testo-2);
+  font-weight: 700;
+}
+.foto img { width: 100%; height: 100%; object-fit: cover; }
+.persona-nome, .persona-ruolo {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
+}
+.persona-nome { font-size: 12px; font-weight: 600; }
+.persona-ruolo { margin-top: 2px; color: var(--testo-2); font-size: 11px; }
+
+.dettagli { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; font-size: 15px; }
+.dettagli dt { color: var(--testo-2); }
+.dettagli dd { margin: 0; }
+
+.zona-rimozione { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--bordo); text-align: center; }
+
+/* ------------------------------------------------------------- barra in basso e avvisi */
+
+.barra {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  height: calc(var(--barra-h) + var(--sicuro-basso));
+  padding-bottom: var(--sicuro-basso);
+  border-top: 1px solid var(--bordo);
+  background: rgba(14, 15, 17, .92);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.barra a {
+  display: flex;
+  flex: 1;
+  max-width: 200px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--testo-3);
+  font-size: 11px;
+  font-weight: 600;
+}
+.barra a.attivo { color: var(--testo); }
+.barra [data-icona] { display: grid; place-items: center; height: 34px; }
+.barra .tondo {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accento);
+  color: var(--accento-testo);
+}
+.barra .tondo .icona { width: 20px; height: 20px; stroke-width: 2.6; }
+
+.avvisi {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--barra-h) + var(--sicuro-basso) + 14px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: calc(100% - 32px);
+  padding: 11px 18px;
+  border-radius: 16px;
+  background: var(--testo);
+  color: var(--sfondo);
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .45);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 10px);
+  transition: opacity .15s, transform .15s;
+}
+.avvisi.visibile { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+.avvisi a { color: #8a5a00; text-decoration: underline; white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .foglio { animation: none; }
+  .avvisi { transition: none; }
+}

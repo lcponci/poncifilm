@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PonciFilm</title>
+  <meta name="description" content="Il mio archivio personale di film">
+  <meta name="theme-color" content="#0e0f11">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PonciFilm">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icone/icona-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icone/icona-180.png">
+  <link rel="preconnect" href="https://api.themoviedb.org" crossorigin>
+  <link rel="preconnect" href="https://image.tmdb.org">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <main id="vista" class="vista-contenitore"></main>
+
+  <nav class="barra" aria-label="Navigazione principale">
+    <a href="#/" data-sezione="libreria"><span data-icona="libreria"></span><span>Libreria</span></a>
+    <a href="#/aggiungi" data-sezione="aggiungi" class="barra-aggiungi"><span class="tondo" data-icona="aggiungi"></span><span>Aggiungi</span></a>
+    <a href="#/impostazioni" data-sezione="impostazioni"><span data-icona="impostazioni"></span><span>Impostazioni</span></a>
+  </nav>
+
+  <div id="avvisi" class="avvisi" role="status" aria-live="polite"></div>
+
+  <noscript><p class="vuoto">Per usare PonciFilm serve JavaScript attivo nel browser.</p></noscript>
+</body>
+</html>
