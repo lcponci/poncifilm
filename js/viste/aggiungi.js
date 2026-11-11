@@ -123,7 +123,7 @@ function apriAnteprima(r) {
     completaFilm(o.id);
     // Già visto: si passa subito al giudizio (voto, riconoscimenti, commento).
     if (stato === 'visto') {
-      apriGiudizio(o.id, { messaggio: `«${r.titolo}» aggiunto ai visti` });
+      apriGiudizio(o.id, { titolo: 'Com\'era?', messaggio: `«${r.titolo}» aggiunto ai visti` });
       return;
     }
     avviso(`«${r.titolo}» da vedere · ${datiPriorita(priorita)?.nome}`,

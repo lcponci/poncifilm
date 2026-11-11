@@ -465,6 +465,83 @@ h1, h2 { margin: 0; line-height: 1.2; }
 .pillola:active { transform: scale(.96); }
 .pillola .quanti { color: var(--testo-3); font-size: 12px; }
 
+/* Riconoscimenti: menu a tendina a scelta multipla. */
+.campo-tendina {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: auto;
+  min-height: 50px;
+  padding: 7px 12px 7px 8px;
+  text-align: left;
+}
+.campo-tendina.aperta { border-color: var(--accento); }
+.tendina-scelti { display: flex; flex: 1; min-width: 0; flex-wrap: wrap; gap: 6px; }
+.tendina-scelti .pillola { min-height: 32px; padding: 0 12px; font-size: 14px; }
+.segnaposto-tendina { padding-left: 6px; color: var(--testo-3); }
+.icona.freccia-tendina { width: 18px; height: 18px; color: var(--testo-2); transform: rotate(-90deg); transition: transform .15s; }
+.campo-tendina.aperta .freccia-tendina { transform: rotate(90deg); }
+.tendina-elenco {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 8px;
+  margin-top: 8px;
+  padding: 6px;
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  background: var(--superficie-2);
+}
+.voce-tendina {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-size: 15px;
+  text-align: left;
+}
+.voce-tendina:active { background: var(--bordo); }
+.casella {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--testo-3);
+  border-radius: 6px;
+  color: transparent;
+}
+.casella .icona { width: 15px; height: 15px; stroke-width: 3; }
+.voce-tendina.attiva .casella { border-color: var(--accento); background: var(--accento); color: var(--accento-testo); }
+.voce-tendina.attiva { font-weight: 700; }
+
+/* Recensione in sola lettura nella scheda. */
+.titolo-sezione { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.titolo-sezione .cambia { padding: 0; }
+.recensione { padding: 16px; border-radius: 16px; background: var(--superficie); }
+.recensione-voto { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 12px; }
+.stelle.grandi { font-size: 24px; letter-spacing: 2px; }
+.recensione-frase { font-size: 17px; font-weight: 700; }
+.recensione .pillole { margin-bottom: 12px; }
+.recensione .pillola { min-height: 32px; padding: 0 12px; font-size: 14px; }
+.recensione-commento { margin: 0; color: #d9dbe0; line-height: 1.5; white-space: pre-wrap; }
+.recensione > :last-child { margin-bottom: 0; }
+
+.visioni strong { color: var(--testo); font-weight: 600; }
+.contatore {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  color: var(--accento);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 textarea.campo.commento { height: auto; min-height: 92px; padding: 12px 14px; line-height: 1.45; resize: vertical; }
 
 .foglio h2 { margin-bottom: 4px; font-size: 20px; }

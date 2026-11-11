@@ -84,7 +84,7 @@ export function apriSceltaStato(o) {
   ));
 }
 
-// Il tuo giudizio su un film: stelle con la frase, riconoscimenti, commento.
+// La recensione di un film: stelle con la frase, riconoscimenti, commento.
 // Ogni tocco viene salvato subito; il commento mentre scrivi (e quando chiudi).
 // Restituisce { el, salva }: "salva" registra il commento ancora in sospeso.
 export function editorGiudizio(id) {
@@ -110,17 +110,33 @@ export function editorGiudizio(id) {
     frase.classList.toggle('vuota', !voto);
   }
 
-  const pillole = imp.riconoscimenti.map(r => h('button', {
-    type: 'button', class: 'pillola', 'data-id': r.id,
-    onclick: () => { archivio.alternaRiconoscimento(id, r.id); aggiornaPillole(); },
-  }, r.nome));
-  function aggiornaPillole() {
-    const scelti = attuale()?.riconoscimenti || [];
-    for (const b of pillole) {
-      const acceso = scelti.includes(b.dataset.id);
+  // Riconoscimenti come menu a tendina a scelta multipla: nel riquadro si vedono
+  // solo quelli scelti; toccandolo si apre l'elenco completo con le spunte.
+  const scelti = h('span', { class: 'tendina-scelti' });
+  const freccia = icona('indietro', 'icona freccia-tendina');
+  const voci = imp.riconoscimenti.map(r => h('button', {
+    type: 'button', class: 'voce-tendina', 'data-id': r.id,
+    onclick: () => { archivio.alternaRiconoscimento(id, r.id); aggiornaRiconoscimenti(); },
+  }, h('span', { class: 'casella' }, icona('spunta')), h('span', null, r.nome)));
+  const elencoTendina = h('div', { class: 'tendina-elenco', hidden: true }, voci);
+  const campoTendina = h('button', {
+    type: 'button', class: 'campo campo-tendina', 'aria-expanded': 'false', 'aria-label': 'Scegli i riconoscimenti',
+    onclick: () => {
+      const apri = elencoTendina.hidden;
+      elencoTendina.hidden = !apri;
+      campoTendina.setAttribute('aria-expanded', String(apri));
+      campoTendina.classList.toggle('aperta', apri);
+    },
+  }, scelti, freccia);
+  function aggiornaRiconoscimenti() {
+    const ids = attuale()?.riconoscimenti || [];
+    for (const b of voci) {
+      const acceso = ids.includes(b.dataset.id);
       b.classList.toggle('attiva', acceso);
       b.setAttribute('aria-pressed', String(acceso));
     }
+    const nomi = imp.riconoscimenti.filter(r => ids.includes(r.id)).map(r => h('span', { class: 'pillola attiva' }, r.nome));
+    scelti.replaceChildren(...(nomi.length ? nomi : [h('span', { class: 'segnaposto-tendina' }, 'Nessuno · tocca per scegliere')]));
   }
 
   // Salva solo se hai scritto qui: così due riquadri aperti sullo stesso film
@@ -142,24 +158,26 @@ export function editorGiudizio(id) {
   }
 
   aggiornaStelle();
-  aggiornaPillole();
+  aggiornaRiconoscimenti();
   const el = h('div', { class: 'giudizio' },
     h('div', { class: 'stelle-voto', role: 'group', 'aria-label': 'Voto' }, bottoniStelle),
     frase,
     h('div', { class: 'etichetta' }, 'Riconoscimenti'),
-    h('div', { class: 'pillole' }, pillole),
+    campoTendina,
+    elencoTendina,
     h('div', { class: 'etichetta' }, 'Commento'),
     commento);
   return { el, salva };
 }
 
-// Pannello "Com'era?" che compare appena segni un film come visto.
-export function apriGiudizio(id, { messaggio = null } = {}) {
+// Pannello per scrivere o modificare la recensione. Si apre da "Modifica" nella
+// scheda, e da solo ("Com'era?") appena segni un film come visto.
+export function apriGiudizio(id, { titolo = 'Recensione', messaggio = null } = {}) {
   const o = archivio.opera(id);
   if (!o) return;
   const editor = editorGiudizio(id);
   const foglio = apriFoglio(h('div', { class: 'foglio-giudizio' },
-    h('h2', null, 'Com\'era?'),
+    h('h2', null, titolo),
     h('p', { class: 'nota' }, messaggio || o.info.titolo),
     editor.el,
     h('button', { type: 'button', class: 'pulsante largo', onclick: () => foglio.chiudi() }, 'Fatto')),

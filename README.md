@@ -18,9 +18,9 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - Aggiunta: la priorità si sceglie subito, con un tocco, nel pannello del film. Anche i film da rivedere hanno una priorità.
 - Scheda film: lo stato è un unico riquadro; toccandolo si scelgono stato e priorità. Ordine: trama, cast, regia e musica, dove vederlo, dettagli.
 - Ricerca: «titolo anno» (es. «dune 1984») cerca la versione di quell'anno. I risultati sono ordinati per somiglianza al testo scritto (ignorando spazi, accenti e maiuscole) e notorietà; se nulla somiglia, l'app riprova da sola con varianti (spazi mancanti come «laland», ultima parola accorciata per gli errori di battitura).
-- Rivisioni: si conservano tutte le date di visione (correggibili a mano); voto e commento sono unici e aggiornabili.
-- Giudizio (stelle con frase, riconoscimenti, commento): nella scheda di ogni film non più «da vedere». Dopo «Segna come visto» o «L'ho già visto» si apre subito il pannello «Com'era?». Toccare di nuovo la stella scelta toglie il voto.
-- Riconoscimenti: si gestiscono in Impostazioni. Rinominare mantiene i collegamenti ai film; eliminare li toglie anche dai film.
+- Rivisioni: si conservano tutte le date di visione (correggibili da «Modifica»); nella scheda si vede solo l'ultima, con il numero di visioni. Per i film visti il pulsante grande diventa «Rivisto». Voto e commento sono unici e aggiornabili.
+- Recensione (stelle con frase, riconoscimenti, commento): nella scheda è in sola lettura; si cambia da «Modifica», in un pannello, per non toccarla per sbaglio. Dopo «Segna come visto» o «L'ho già visto» il pannello si apre da solo («Com'era?»). Toccare di nuovo la stella scelta toglie il voto.
+- Riconoscimenti: menu a tendina a scelta multipla (si vedono solo quelli scelti). Si gestiscono in Impostazioni: rinominare mantiene i collegamenti ai film; eliminare li toglie anche dai film.
 - Stato «Da vedere»; priorità: **Day one / Il prima possibile / Prima o poi**.
 - Colonna sonora: solo il compositore.
 - Piattaforme: aggiornate quando si apre la scheda del film (al massimo una volta l'ora), con correzioni manuali che non vengono sovrascritte.

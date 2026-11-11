@@ -2,7 +2,7 @@
 
 import { h, icona, avviso, apriFoglio, formattaData, formattaDurata, nomePaese, normalizza, stelle } from '../ui.js';
 import {
-  locandina, logoPiattaforma, descrizioneStato, segnoStato, apriSceltaStato, editorGiudizio, apriGiudizio,
+  locandina, logoPiattaforma, descrizioneStato, segnoStato, apriSceltaStato, apriGiudizio,
 } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { immagine, haChiave, elencoPiattaforme } from '../tmdb.js';
@@ -22,13 +22,8 @@ function sezione(titolo, ...contenuto) {
 
 export function vistaFilm(id) {
   const el = h('article', { class: 'vista film' });
-  let editor = null;
-  let ridisegnoInSospeso = false;
 
   function disegna() {
-    const precedente = editor;
-    editor = null;
-    precedente?.salva(); // commento ancora in sospeso
     const o = archivio.opera(id);
     if (!o) {
       el.replaceChildren(pulsanteIndietro(), h('div', { class: 'vuoto' },
@@ -36,31 +31,15 @@ export function vistaFilm(id) {
         h('a', { class: 'pulsante', href: '#/' }, 'Torna alla libreria')));
       return;
     }
-    if (o.stato !== 'da-vedere') editor = editorGiudizio(id);
     // Le parti vuote (false/null) non vanno mostrate.
-    el.replaceChildren(...contenuto(o, editor).filter(parte => parte instanceof Node));
+    el.replaceChildren(...contenuto(o).filter(parte => parte instanceof Node));
   }
 
-  // Mentre scrivi il commento la pagina non si ridisegna (perderesti la tastiera):
-  // lo fa appena smetti di scrivere.
-  const stacca = archivio.ascolta(cambiato => {
-    if (cambiato !== id) return;
-    if (document.activeElement?.matches('textarea') && el.contains(document.activeElement)) {
-      ridisegnoInSospeso = true;
-      return;
-    }
-    disegna();
-  });
-  el.addEventListener('focusout', () => {
-    if (!ridisegnoInSospeso) return;
-    ridisegnoInSospeso = false;
-    setTimeout(disegna, 0);
-  });
-
   disegna();
+  const stacca = archivio.ascolta(cambiato => { if (cambiato === id) disegna(); });
   return {
     el,
-    smonta() { editor?.salva(); stacca(); },
+    smonta: stacca,
     montata() {
       const o = archivio.opera(id);
       if (!o) return;
@@ -71,7 +50,7 @@ export function vistaFilm(id) {
   };
 }
 
-function contenuto(o, editor) {
+function contenuto(o) {
   const i = o.info;
   const regia = i.regia || [];
   const musica = i.musica || [];
@@ -95,7 +74,7 @@ function contenuto(o, editor) {
       ? 'Sto recuperando le informazioni da TMDb…'
       : 'Inserisci la chiave TMDb nelle Impostazioni per completare le informazioni.'),
     pannelloAzioni(o),
-    editor && sezione('Il tuo giudizio', editor.el),
+    o.stato !== 'da-vedere' && sezioneRecensione(o),
     i.trama && sezione('Trama', h('p', { class: 'trama' },
       i.tramaLingua === 'en' && h('span', { class: 'lingua', title: 'Trama disponibile solo in inglese' }, 'EN'),
       i.trama)),
@@ -124,31 +103,64 @@ function pannelloAzioni(o) {
       h('span', null, descrizione.testo)),
     h('span', { class: 'cambia' }, 'Cambia')));
 
+  // Pulsante grande: "Segna come visto" finché non l'hai visto, poi "Rivisto".
   if (o.stato === 'da-vedere' || o.stato === 'da-rivedere') {
     parti.push(h('button', {
       type: 'button', class: 'pulsante largo grande',
-      onclick: () => { archivio.segnaVisto(o.id); apriGiudizio(o.id, { messaggio: `Segnato come visto oggi: «${o.info.titolo}»` }); },
+      onclick: () => {
+        archivio.segnaVisto(o.id);
+        apriGiudizio(o.id, { titolo: 'Com\'era?', messaggio: `Segnato come visto oggi: «${o.info.titolo}»` });
+      },
     }, icona('spunta'), 'Segna come visto'));
-  }
-
-  if (o.visioni.length || o.stato === 'visto') {
-    const date = [...o.visioni].sort().reverse().map(formattaData);
-    parti.push(h('div', { class: 'riga-visioni' },
-      h('p', { class: 'visioni' }, !date.length ? 'Nessuna data di visione'
-        : [date.length === 1 ? 'Visto il ' : 'Visioni: ', date.join(' · ')]),
-      h('button', { type: 'button', class: 'pulsante-testo cambia', onclick: () => apriDate(o.id) },
-        date.length ? 'Modifica' : 'Aggiungi')));
-  }
-
-  if (o.stato === 'visto') {
+  } else if (o.stato === 'visto') {
     const giaOggi = o.visioni.includes(archivio.oggi());
     parti.push(h('button', {
-      type: 'button', class: 'pulsante secondario largo', disabled: giaOggi,
-      onclick: () => { archivio.segnaVisto(o.id); avviso('Nuova visione registrata'); },
-    }, icona(giaOggi ? 'spunta' : 'ripeti'), giaOggi ? 'Visto oggi' : 'L\'ho rivisto oggi'));
+      type: 'button', class: 'pulsante largo grande', disabled: giaOggi,
+      onclick: () => {
+        archivio.segnaVisto(o.id);
+        avviso(`Visione registrata: è la ${archivio.opera(o.id).visioni.length}ª`);
+      },
+    }, icona(giaOggi ? 'spunta' : 'ripeti'), giaOggi ? 'Rivisto oggi' : 'Rivisto'));
+  }
+
+  // Solo l'ultima visione, con il numero totale; "Modifica" le mostra tutte.
+  if (o.visioni.length || o.stato === 'visto') {
+    const ultima = archivio.ultimaVisione(o);
+    const quante = o.visioni.length;
+    parti.push(h('div', { class: 'riga-visioni' },
+      h('p', { class: 'visioni' }, !ultima ? 'Nessuna data di visione' : [
+        quante === 1 ? 'Visto il ' : 'Ultima visione: ', h('strong', null, formattaData(ultima)),
+        quante > 1 && h('span', { class: 'contatore' }, `${quante} visioni`),
+      ]),
+      h('button', { type: 'button', class: 'pulsante-testo cambia', onclick: () => apriDate(o.id) },
+        ultima ? 'Modifica' : 'Aggiungi')));
   }
 
   return h('section', { class: 'pannello-azioni' }, ...parti);
+}
+
+// La recensione si legge e basta: per cambiarla si tocca "Modifica"
+// (così non si modifica per sbaglio scorrendo la pagina).
+function sezioneRecensione(o) {
+  const imp = archivio.impostazioni();
+  const frase = o.voto ? imp.voti.find(v => v.valore === o.voto)?.frase : null;
+  const riconoscimenti = imp.riconoscimenti.filter(r => o.riconoscimenti.includes(r.id));
+  const vuota = !o.voto && !riconoscimenti.length && !o.commento;
+  const modifica = () => apriGiudizio(o.id);
+
+  return h('section', { class: 'sezione' },
+    h('div', { class: 'titolo-sezione' },
+      h('h2', null, 'Recensione'),
+      !vuota && h('button', { type: 'button', class: 'pulsante-testo cambia', onclick: modifica }, 'Modifica')),
+    vuota
+      ? h('button', { type: 'button', class: 'pulsante secondario largo', onclick: modifica }, icona('matita'), 'Scrivi la recensione')
+      : h('div', { class: 'recensione' },
+          o.voto && h('div', { class: 'recensione-voto' },
+            h('span', { class: 'stelle grandi', 'aria-label': `${o.voto} stelle su 5` }, '★'.repeat(o.voto) + '☆'.repeat(5 - o.voto)),
+            frase && h('span', { class: 'recensione-frase' }, frase)),
+          riconoscimenti.length > 0 && h('div', { class: 'pillole' },
+            riconoscimenti.map(r => h('span', { class: 'pillola attiva' }, r.nome))),
+          o.commento && h('p', { class: 'recensione-commento' }, o.commento)));
 }
 
 function sezionePiattaforme(o) {
