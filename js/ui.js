@@ -78,8 +78,69 @@ export function apriFoglio(contenuto, { alChiudere } = {}) {
   velo.addEventListener('click', chiudi);
   document.addEventListener('keydown', tasto);
   window.addEventListener('hashchange', chiudi);
+  trascinaPerChiudere(pannello, velo, chiudi);
   document.body.append(velo, pannello);
   return { chiudi };
+}
+
+// Trascinando il pannello verso il basso (quando è già scorso fino in cima) si chiude,
+// come nelle app dell'iPhone. Se lo lasci prima, torna al suo posto.
+function trascinaPerChiudere(pannello, velo, chiudi) {
+  let inizioY = null;
+  let inizioTempo = 0;
+  let spostamento = 0;
+  let trascinando = false;
+
+  const torna = () => {
+    pannello.style.transition = 'transform .18s ease-out';
+    velo.style.transition = 'opacity .18s';
+    pannello.style.transform = '';
+    velo.style.opacity = '';
+  };
+
+  pannello.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) { inizioY = null; return; }
+    inizioY = e.touches[0].clientY;
+    inizioTempo = Date.now();
+    spostamento = 0;
+    trascinando = false;
+  }, { passive: true });
+
+  pannello.addEventListener('touchmove', e => {
+    if (inizioY === null) return;
+    const y = e.touches[0].clientY - inizioY;
+    if (!trascinando) {
+      if (Math.abs(y) < 8) return;
+      // Verso l'alto, o con il contenuto non in cima: è un normale scorrimento.
+      if (y < 0 || pannello.scrollTop > 0) { inizioY = null; return; }
+      trascinando = true;
+      document.activeElement?.blur?.(); // chiude la tastiera, se aperta
+      pannello.style.transition = 'none';
+      velo.style.transition = 'none';
+    }
+    spostamento = Math.max(0, y);
+    pannello.style.transform = `translateY(${spostamento}px)`;
+    velo.style.opacity = String(Math.max(0.2, 1 - spostamento / 400));
+    e.preventDefault();
+  }, { passive: false });
+
+  const fine = () => {
+    if (!trascinando) { inizioY = null; return; }
+    const veloce = spostamento / Math.max(1, Date.now() - inizioTempo) > 0.6;
+    if (spostamento > 110 || (veloce && spostamento > 40)) {
+      pannello.style.transition = 'transform .2s ease-in';
+      velo.style.transition = 'opacity .2s';
+      pannello.style.transform = 'translateY(100%)';
+      velo.style.opacity = '0';
+      setTimeout(chiudi, 200);
+    } else {
+      torna();
+    }
+    inizioY = null;
+    trascinando = false;
+  };
+  pannello.addEventListener('touchend', fine);
+  pannello.addEventListener('touchcancel', fine);
 }
 
 export function vuoto(...contenuto) {

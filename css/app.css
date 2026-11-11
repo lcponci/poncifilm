@@ -332,7 +332,11 @@ h1, h2 { margin: 0; line-height: 1.2; }
 .azioni-aggiungi .etichetta { margin: 0 0 8px; }
 .azioni-aggiungi .priorita-scelta + .etichetta { margin-top: 16px; }
 
-.scelta-stato h2 { margin-bottom: 16px; font-size: 19px; }
+.foglio .scelta-stato h2 { margin-bottom: 16px; font-size: 19px; }
+.zona-priorita { margin-top: 18px; animation: compari .15s ease-out; }
+@keyframes compari { from { opacity: 0; transform: translateY(-4px); } }
+.abbandona { display: inline-flex; align-items: center; gap: 6px; color: var(--testo-3); font-size: 14px; }
+.abbandona .icona { width: 16px; height: 16px; }
 .scelta-stato .etichetta { margin: 0 0 8px; }
 .scelta-stato .etichetta ~ .etichetta { margin-top: 18px; }
 .azioni .nota { margin: 0 0 12px; }

@@ -238,6 +238,19 @@ export function elencoPiattaforme() {
 
 const persona = p => ({ id: p.id, nome: p.name, foto: p.profile_path || null });
 
+// Regista di un film (per i risultati di ricerca: "Gli uccelli · Alfred Hitchcock").
+// TMDb non lo dà insieme ai risultati, quindi lo chiedo a parte e lo ricordo.
+const registiInMemoria = new Map();
+export function registiDi(tmdbId, signal) {
+  if (!registiInMemoria.has(tmdbId)) {
+    const richiesta = chiama(`/movie/${tmdbId}/credits`, {}, { signal })
+      .then(d => senzaDoppioni((d.crew || []).filter(p => p.job === 'Director')).map(p => p.name))
+      .catch(errore => { registiInMemoria.delete(tmdbId); throw errore; });
+    registiInMemoria.set(tmdbId, richiesta);
+  }
+  return registiInMemoria.get(tmdbId);
+}
+
 function senzaDoppioni(elenco) {
   const visti = new Set();
   return elenco.filter(p => (visti.has(p.id) ? false : visti.add(p.id)));

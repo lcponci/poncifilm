@@ -120,7 +120,7 @@ function pannelloAzioni(o) {
         archivio.segnaVisto(o.id);
         avviso(`Visione registrata: è la ${archivio.opera(o.id).visioni.length}ª`);
       },
-    }, icona(giaOggi ? 'spunta' : 'ripeti'), giaOggi ? 'Rivisto oggi' : 'Rivisto'));
+    }, icona(giaOggi ? 'spunta' : 'ripeti'), giaOggi ? 'Visto oggi' : 'Rivisto'));
   }
 
   // Solo l'ultima visione, con il numero totale; "Modifica" le mostra tutte.

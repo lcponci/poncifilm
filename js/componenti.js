@@ -53,35 +53,66 @@ export function pulsantiPriorita(attiva, scegli) {
     }, h('span', { class: 'pallino', style: { background: p.colore } }), h('span', null, p.nome))));
 }
 
-// Pannello per cambiare stato e priorità con un solo tocco.
+// Pannello per cambiare stato e priorità.
+// In alto i tre stati; sotto, solo per "Da vedere" e "Da rivedere", le priorità.
+// Un tocco sullo stato lo applica subito; il pannello resta aperto se c'è anche
+// una priorità da poter scegliere. "Abbandonato" è in disparte, in fondo.
+const STATI_PRINCIPALI = [
+  ['da-vedere', 'segnalibro'],
+  ['da-rivedere', 'ripeti'],
+  ['visto', 'spunta'],
+];
+const haPriorita = stato => stato === 'da-vedere' || stato === 'da-rivedere';
+
 export function apriSceltaStato(o) {
-  const prioritaAttuale = archivio.prioritaDi(o);
+  const id = o.id;
+  const attuale = () => archivio.opera(id);
   let foglio = null;
 
-  function scegli(stato, priorita = null) {
-    archivio.impostaStato(o.id, stato, priorita);
-    foglio.chiudi();
-    avviso(descrizioneStato(o).testo);
+  function cambiaStato(stato) {
+    const prima = attuale().stato;
+    if (stato !== prima) {
+      // Tornando "da vedere" o "da rivedere" si riparte dalla priorità predefinita,
+      // invece di ereditare una vecchia priorità di quando non l'avevi ancora visto.
+      const priorita = haPriorita(stato) && !haPriorita(prima) ? archivio.impostazioni().prioritaPredefinita : null;
+      archivio.impostaStato(id, stato, priorita);
+    }
+    if (!haPriorita(stato)) {
+      foglio.chiudi();
+      avviso(descrizioneStato(attuale()).testo);
+      return;
+    }
+    disegna();
   }
 
-  const opzioneSemplice = (stato, nomeIcona, testo) => h('button', {
-    type: 'button',
-    class: 'opzione riga' + (o.stato === stato ? ' attiva' : ''),
-    'aria-pressed': String(o.stato === stato),
-    onclick: () => scegli(stato),
-  }, icona(nomeIcona), testo);
+  function scegliPriorita(priorita) {
+    archivio.impostaStato(id, attuale().stato, priorita);
+    foglio.chiudi();
+    avviso(descrizioneStato(attuale()).testo);
+  }
 
-  foglio = apriFoglio(h('div', { class: 'scelta-stato' },
-    h('h2', null, o.info.titolo),
-    h('div', { class: 'etichetta' }, 'Da vedere'),
-    pulsantiPriorita(o.stato === 'da-vedere' ? prioritaAttuale : null, p => scegli('da-vedere', p)),
-    h('div', { class: 'etichetta' }, 'Da rivedere'),
-    pulsantiPriorita(o.stato === 'da-rivedere' ? prioritaAttuale : null, p => scegli('da-rivedere', p)),
-    h('div', { class: 'etichetta' }, 'Altro'),
-    h('div', { class: 'azioni due' },
-      opzioneSemplice('visto', 'spunta', 'Visto'),
-      opzioneSemplice('abbandonato', 'chiudi', 'Abbandonato')),
-  ));
+  const corpo = h('div');
+  function disegna() {
+    const stato = attuale().stato;
+    // h() salta da solo le parti vuote (false/null), replaceChildren no.
+    corpo.replaceChildren(h('div', null,
+      h('div', { class: 'etichetta' }, 'Stato'),
+      h('div', { class: 'priorita-scelta' }, STATI_PRINCIPALI.map(([s, nomeIcona]) => h('button', {
+        type: 'button', class: 'opzione' + (s === stato ? ' attiva' : ''), 'aria-pressed': String(s === stato),
+        onclick: () => cambiaStato(s),
+      }, icona(nomeIcona), h('span', null, nomeStato(s))))),
+      haPriorita(stato) && h('div', { class: 'zona-priorita' },
+        h('div', { class: 'etichetta' }, `Priorità · ${nomeStato(stato).toLowerCase()}`),
+        pulsantiPriorita(archivio.prioritaDi(attuale()), scegliPriorita)),
+      h('div', { class: 'centrato' }, stato === 'abbandonato'
+        ? h('p', { class: 'nota' }, 'Ora è tra gli abbandonati.')
+        : h('button', { type: 'button', class: 'pulsante-testo abbandona', onclick: () => cambiaStato('abbandonato') },
+            icona('chiudi'), 'Segna come abbandonato')),
+    ));
+  }
+
+  disegna();
+  foglio = apriFoglio(h('div', { class: 'scelta-stato' }, h('h2', null, o.info.titolo), corpo));
 }
 
 // La recensione di un film: stelle con la frase, riconoscimenti, commento.

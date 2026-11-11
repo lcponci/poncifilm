@@ -3,7 +3,7 @@
 import { h, icona, avviso, apriFoglio } from '../ui.js';
 import { locandina, nomeStato, descrizioneStato, datiPriorita, pulsantiPriorita, apriGiudizio } from '../componenti.js';
 import * as archivio from '../archivio.js';
-import { cercaFilm, haChiave } from '../tmdb.js';
+import { cercaFilm, haChiave, registiDi } from '../tmdb.js';
 import { completaFilm } from '../servizi.js';
 
 // La ricerca resta lì quando torni indietro da una scheda.
@@ -81,7 +81,7 @@ export function vistaAggiungi() {
       return;
     }
     stato.textContent = memoria.risultati.length ? '' : 'Nessun film trovato su TMDb. Prova con il titolo originale.';
-    elenco.replaceChildren(...memoria.risultati.map(rigaRisultato));
+    elenco.replaceChildren(...memoria.risultati.map((r, i) => rigaRisultato(r, i, controllo?.signal)));
   }
 
   disegna();
@@ -97,18 +97,28 @@ export function vistaAggiungi() {
   };
 }
 
+// "1963 · Alfred Hitchcock · The Birds"
 function sottotitolo(r) {
   const originale = r.titoloOriginale && r.titoloOriginale !== r.titolo ? r.titoloOriginale : null;
-  return [r.anno ?? 'anno sconosciuto', originale].filter(Boolean).join(' · ');
+  return [r.anno ?? 'anno sconosciuto', r.registi?.join(', '), originale].filter(Boolean).join(' · ');
 }
 
-function rigaRisultato(r) {
+const RISULTATI_CON_REGISTA = 12;
+
+function rigaRisultato(r, posizione, signal) {
   const presente = archivio.opera(archivio.idFilm(r.tmdbId));
+  const sotto = h('div', { class: 'riga-sotto' }, sottotitolo(r));
+  // Il regista arriva un attimo dopo: lo aggiungo appena c'è.
+  if (!r.registi && posizione < RISULTATI_CON_REGISTA) {
+    registiDi(r.tmdbId, signal)
+      .then(registi => { r.registi = registi; sotto.textContent = sottotitolo(r); })
+      .catch(() => { /* senza regista va bene lo stesso */ });
+  }
   return h('button', { type: 'button', class: 'riga-risultato', onclick: () => apriAnteprima(r) },
     h('div', { class: 'riga-locandina' }, locandina(r.locandina, 'w154', '')),
     h('div', { class: 'riga-testo' },
       h('div', { class: 'riga-titolo' }, r.titolo),
-      h('div', { class: 'riga-sotto' }, sottotitolo(r)),
+      sotto,
       presente && h('span', { class: 'etichetta-stato' }, nomeStato(presente.stato))),
   );
 }
