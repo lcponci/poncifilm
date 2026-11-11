@@ -19,7 +19,7 @@
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; background: var(--sfondo); }
 body {
   margin: 0;
   background: var(--sfondo);
@@ -36,7 +36,11 @@ h1, h2 { margin: 0; line-height: 1.2; }
 :focus-visible { outline: 2px solid var(--accento); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
+/* Ogni pagina è alta almeno quanto lo schermo (più 1 pixel): sull'iPhone, nelle
+   pagine corte, la barra in basso altrimenti può "staccarsi" dal fondo. */
 .vista-contenitore {
+  min-height: calc(100vh + 1px);
+  min-height: calc(100lvh + 1px);
   max-width: 960px;
   margin: 0 auto;
   padding: calc(var(--sicuro-alto) + 12px) 16px calc(var(--barra-h) + var(--sicuro-basso) + 28px);

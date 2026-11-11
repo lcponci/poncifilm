@@ -3,7 +3,7 @@
 // IMPORTANTE: a ogni nuova versione cambiare VERSIONE (e js/versione.js),
 // altrimenti i dispositivi continuano a usare la copia vecchia.
 
-const VERSIONE = 'poncifilm-0.2.0';
+const VERSIONE = 'poncifilm-0.2.1';
 
 const FILE_APP = [
   './',

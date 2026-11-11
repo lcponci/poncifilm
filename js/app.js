@@ -84,6 +84,20 @@ function preparaBarra() {
   });
 }
 
+// Sull'iPhone, quando la tastiera si chiude, la barra in basso a volte resta
+// sollevata: un minimo scorrimento costringe Safari a ricalcolarne la posizione.
+function sistemaDopoTastiera() {
+  document.addEventListener('focusout', evento => {
+    if (!evento.target.matches?.('input, textarea')) return;
+    setTimeout(() => {
+      if (document.activeElement?.matches?.('input, textarea')) return; // tastiera ancora aperta
+      const y = window.scrollY;
+      window.scrollTo(0, y + 1);
+      window.scrollTo(0, y);
+    }, 150);
+  });
+}
+
 function registraServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   // Sul computer di sviluppo niente copia offline, così si vedono subito le modifiche.
@@ -104,6 +118,7 @@ function registraServiceWorker() {
 
 async function avvia() {
   preparaBarra();
+  sistemaDopoTastiera();
   try {
     await carica();
   } catch (errore) {

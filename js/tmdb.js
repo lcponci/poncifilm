@@ -66,15 +66,131 @@ export async function verificaChiave(chiaveDaProvare) {
 
 const annoDa = data => (data && /^\d{4}/.test(data) ? Number(data.slice(0, 4)) : null);
 
+// ---------------------------------------------------------------- ricerca
+//
+// TMDb trova solo parole scritte giuste e separate. Per essere più "furbi":
+// 1. i risultati vengono rimessi in ordine: prima i titoli più simili a quello
+//    scritto (ignorando spazi, accenti e maiuscole), poi i film più conosciuti;
+// 2. se nessun risultato somiglia davvero, si riprova con alcune varianti:
+//    spazi inseriti ("laland" → "la land") e ultima parola accorciata
+//    ("interstelar" → "interstel", che TMDb completa da solo).
 // "dune 1984" o "dune (1984)" cerca la versione di quell'anno; se non trova nulla
 // riprova con il testo intero (così "Blade Runner 2049" funziona comunque).
+
 export async function cercaFilm(testo, signal) {
   const conAnno = testo.match(/^(.*\S)\s+\(?((?:18|19|20)\d{2})\)?$/);
   if (conAnno && Number(conAnno[2]) <= new Date().getFullYear() + 5) {
-    const risultati = await cerca(conAnno[1], signal, conAnno[2]);
+    const risultati = await cercaFurbo(conAnno[1], signal, conAnno[2]);
     if (risultati.length) return risultati;
   }
-  return cerca(testo, signal);
+  return cercaFurbo(testo, signal);
+}
+
+const SOGLIA_BUONA = 0.8;   // somiglianza oltre la quale un risultato "è quello giusto"
+const SOGLIA_VARIANTI = 0.6; // i risultati delle varianti devono somigliare almeno così
+
+async function cercaFurbo(testo, signal, anno = null) {
+  const scritto = compatto(testo);
+  const principali = await cerca(testo, signal, anno);
+  const valutati = principali.map((r, posizione) => ({ r, somiglianza: somiglianza(scritto, r), posizione }));
+
+  // Le varianti servono se nessun titolo somiglia, oppure se i risultati sono
+  // pochi e nessuno è identico (es. "laland" trova solo un film sconosciuto).
+  const trovatoBene = valutati.some(v => v.somiglianza >= SOGLIA_BUONA);
+  const identico = valutati.some(v => v.somiglianza === 1);
+  if ((!trovatoBene || (!identico && valutati.length < 5)) && scritto.length >= 4) {
+    const extra = await Promise.allSettled(varianti(testo).map(v => cerca(v, signal, anno)));
+    if (signal?.aborted) throw new DOMException('Ricerca annullata', 'AbortError');
+    const giaPresenti = new Set(principali.map(r => r.tmdbId));
+    for (const esito of extra) {
+      if (esito.status !== 'fulfilled') continue;
+      for (const r of esito.value) {
+        if (giaPresenti.has(r.tmdbId)) continue;
+        const s = somiglianza(scritto, r);
+        if (s < SOGLIA_VARIANTI) continue;
+        giaPresenti.add(r.tmdbId);
+        valutati.push({ r, somiglianza: s, posizione: 20 });
+      }
+    }
+  }
+
+  return valutati
+    .map(v => ({ ...v, punti: punteggio(v) }))
+    .sort((a, b) => b.punti - a.punti)
+    .slice(0, 20)
+    .map(v => v.r);
+}
+
+// Somiglianza conta più di tutto; poi quanto è conosciuto il film (numero di voti
+// su TMDb); infine, di poco, l'ordine proposto da TMDb.
+function punteggio({ r, somiglianza: s, posizione }) {
+  const notorieta = Math.min(1, Math.log10(1 + (r.voti || 0)) / 4);
+  return s + 0.3 * notorieta + 0.1 * Math.max(0, 1 - posizione / 20);
+}
+
+// Minuscole, senza accenti, spazi né punteggiatura: "La La Land" → "lalaland".
+function compatto(testo) {
+  return (testo || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Da 0 (niente a che vedere) a 1 (identico), confrontando sia il titolo
+// italiano sia quello originale.
+function somiglianza(scritto, r) {
+  return Math.max(somiglianzaTitolo(scritto, r.titolo), somiglianzaTitolo(scritto, r.titoloOriginale));
+}
+
+function somiglianzaTitolo(scritto, titolo) {
+  const t = compatto(titolo);
+  if (!scritto || !t) return 0;
+  if (t === scritto) return 1;
+  if (t.startsWith(scritto)) return 0.95;
+  if (t.includes(scritto)) return 0.85;
+  // Errori di battitura: confronto con il titolo intero e con il suo inizio
+  // (spesso si scrive solo la prima parte del titolo).
+  const intero = 1 - distanza(scritto, t) / Math.max(scritto.length, t.length);
+  const inizio = 1 - distanza(scritto, t.slice(0, scritto.length)) / scritto.length;
+  return Math.max(0, intero, inizio * 0.9);
+}
+
+// Quante lettere bisogna cambiare, aggiungere o togliere per passare da a a b.
+function distanza(a, b) {
+  let riga = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const nuova = [i];
+    for (let j = 1; j <= b.length; j++) {
+      nuova[j] = Math.min(riga[j] + 1, nuova[j - 1] + 1, riga[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    riga = nuova;
+  }
+  return riga[b.length];
+}
+
+// Altri modi di scrivere lo stesso titolo, da provare quando il primo tentativo va male.
+function varianti(testo) {
+  const parole = testo.trim().split(/\s+/);
+  const risultato = new Set();
+
+  // Spazi dimenticati: spezzo in due la parola più lunga in ogni punto possibile.
+  const lunga = parole.reduce((a, b) => (b.length > a.length ? b : a), '');
+  const indice = parole.indexOf(lunga);
+  if (lunga.length >= 5) {
+    for (let i = 2; i <= Math.min(lunga.length - 2, 13); i++) {
+      const spezzate = [...parole];
+      spezzate[indice] = `${lunga.slice(0, i)} ${lunga.slice(i)}`;
+      risultato.add(spezzate.join(' '));
+    }
+  }
+
+  // Ultima parola sbagliata in fondo: la accorcio, TMDb completa le parole iniziate.
+  const ultima = parole[parole.length - 1];
+  for (const togli of [1, 2]) {
+    if (ultima.length - togli >= 3) {
+      risultato.add([...parole.slice(0, -1), ultima.slice(0, -togli)].join(' '));
+    }
+  }
+
+  risultato.delete(testo.trim());
+  return [...risultato];
 }
 
 async function cerca(testo, signal, anno = null) {
@@ -90,6 +206,7 @@ async function cerca(testo, signal, anno = null) {
     locandina: r.poster_path || null,
     sfondo: r.backdrop_path || null,
     trama: (r.overview || '').trim() || null,
+    voti: r.vote_count || 0,
   }));
 }
 
