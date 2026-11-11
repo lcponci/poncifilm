@@ -573,6 +573,11 @@ textarea.campo.commento { height: auto; min-height: 92px; padding: 12px 14px; li
 .correggi { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; }
 .correggi .icona { width: 16px; height: 16px; }
 
+.scheda-info .azioni.due { margin-bottom: 4px; }
+.scheda-info .pulsante.largo + .riga-link { margin-top: 18px; }
+.scollega { display: block; margin: 10px auto 0; font-size: 14px; }
+.nota.piccola { margin-top: 12px; color: var(--testo-3); font-size: 12px; }
+
 .riga-aggiungi { display: flex; gap: 10px; }
 .scheda-info .riga-aggiungi .campo { flex: 1; min-width: 0; margin: 0; }
 

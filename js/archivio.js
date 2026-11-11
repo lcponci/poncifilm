@@ -76,7 +76,7 @@ function nuovoArchivio() {
 }
 
 // Porta un archivio vecchio alla struttura attuale (oggi c'è una sola versione).
-function migra(dati) {
+export function migra(dati) {
   const base = nuovoArchivio();
   const archivio = { ...base, ...dati };
   archivio.impostazioni = { ...base.impostazioni, ...dati.impostazioni };
@@ -328,6 +328,92 @@ export function eliminaRiconoscimento(id) {
   }
   archivio.impostazioni.riconoscimenti = archivio.impostazioni.riconoscimenti.filter(r => r.id !== id);
   toccaImpostazioni();
+}
+
+// ---------------------------------------------------------------- unione tra dispositivi
+//
+// Quando iPhone e computer hanno modificato l'archivio ognuno per conto suo, le due
+// copie si uniscono così:
+// - per ogni film vincono le TUE scelte più recenti (modificatoIl);
+// - le informazioni da TMDb e le piattaforme automatiche: vince la copia aggiornata più di recente;
+// - un film eliminato resta eliminato, a meno che tu non lo abbia modificato dopo;
+// - impostazioni (riconoscimenti, ...): vince la versione modificata più di recente.
+
+const piuRecente = (a, b) => (a || '') > (b || '');
+
+function infoMigliore(x, y) {
+  if (x.infoCompleta !== y.infoCompleta) return x.infoCompleta;
+  return piuRecente(x.info?.aggiornateIl, y.info?.aggiornateIl);
+}
+
+function unisciOpera(a, b) {
+  const base = piuRecente(b.modificatoIl, a.modificatoIl) ? b : a;
+  const altra = base === a ? b : a;
+  const o = structuredClone(base);
+  if (infoMigliore(altra, base)) {
+    o.info = structuredClone(altra.info);
+    o.infoCompleta = altra.infoCompleta;
+  }
+  if (piuRecente(altra.piattaforme?.aggiornateIl, base.piattaforme?.aggiornateIl)) {
+    o.piattaforme.auto = structuredClone(altra.piattaforme.auto);
+    o.piattaforme.aggiornateIl = altra.piattaforme.aggiornateIl;
+  }
+  return o;
+}
+
+export function unisci(a, b) {
+  const eliminati = { ...a.eliminati };
+  for (const [id, data] of Object.entries(b.eliminati || {})) {
+    if (piuRecente(data, eliminati[id])) eliminati[id] = data;
+  }
+  const opereUnite = {};
+  for (const id of new Set([...Object.keys(a.opere), ...Object.keys(b.opere || {})])) {
+    const oa = a.opere[id];
+    const ob = b.opere?.[id];
+    const o = oa && ob ? unisciOpera(oa, ob) : structuredClone(oa || ob);
+    const eliminatoIl = eliminati[id];
+    if (eliminatoIl && !piuRecente(o.modificatoIl, eliminatoIl)) continue; // eliminato dopo l'ultima modifica
+    delete eliminati[id]; // modificato (o riaggiunto) dopo l'eliminazione: resta
+    opereUnite[id] = o;
+  }
+  const impostazioniB = b.impostazioni || {};
+  return {
+    ...a,
+    creatoIl: [a.creatoIl, b.creatoIl].filter(Boolean).sort()[0] || a.creatoIl,
+    modificatoIl: [a.modificatoIl, b.modificatoIl].filter(Boolean).sort().pop() || a.modificatoIl,
+    impostazioni: structuredClone(piuRecente(impostazioniB.modificateIl, a.impostazioni.modificateIl)
+      ? { ...a.impostazioni, ...impostazioniB } : a.impostazioni),
+    opere: opereUnite,
+    eliminati,
+  };
+}
+
+// Testo dell'archivio con le chiavi sempre nello stesso ordine: così due copie
+// uguali danno lo stesso testo, e su GitHub le differenze tra versioni sono leggibili.
+export function testoOrdinato(valore, rientro = 1) {
+  const ordina = v => {
+    if (Array.isArray(v)) return v.map(ordina);
+    if (v && typeof v === 'object') {
+      return Object.fromEntries(Object.keys(v).sort().filter(k => v[k] !== undefined).map(k => [k, ordina(v[k])]));
+    }
+    return v;
+  };
+  return JSON.stringify(ordina(valore), null, rientro);
+}
+
+// "Firma" del contenuto: uguale se due archivi contengono gli stessi dati
+// (la data dell'ultimo salvataggio non conta).
+export const firma = dati => testoOrdinato({ ...dati, modificatoIl: undefined }, 0);
+
+// Unisce nell'archivio di questo dispositivo una copia arrivata da fuori (GitHub).
+// Restituisce true se qualcosa è cambiato qui.
+export function unisciCopia(altra) {
+  const prima = firma(archivio);
+  const unito = unisci(archivio, migra(altra));
+  if (firma(unito) === prima) return false;
+  archivio = unito;
+  notifica(null);
+  return true;
 }
 
 // ---------------------------------------------------------------- aggiornamenti automatici

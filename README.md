@@ -8,11 +8,13 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - **App web installabile** (PWA): sull'iPhone si apre l'indirizzo in Safari → Condividi → «Aggiungi alla schermata Home».
 - **HTML, CSS e JavaScript semplici**, senza compilazione né framework: si modifica e si pubblica così com'è.
 - **Indirizzo**: <https://lcponci.github.io/poncifilm/> (GitHub Pages, da questo repository pubblico).
-- **Dati**: per ora nel browser del dispositivo (IndexedDB). Dalla fase 3 in un file JSON dentro un **repository GitHub privato** separato: ogni salvataggio diventa una versione recuperabile.
+- **Dati**: nel browser di ogni dispositivo (IndexedDB) e, una volta collegato da Impostazioni, nel file `poncifilm.json` di un **repository GitHub privato** separato (es. `poncifilm-dati`): ogni salvataggio è un commit, quindi ogni versione è recuperabile.
 - **TMDb** per titoli, trame, locandine, cast, regia, compositore, saga e piattaforme in Italia (dati JustWatch).
 
 ## Decisioni prese
 
+- Salvataggio online: l'app sincronizza da sola (all'avvio, al rientro nell'app, 5 secondi dopo ogni modifica, all'uscita, al ritorno della rete). Unione tra dispositivi: per ogni film vincono le scelte personali più recenti; informazioni TMDb e piattaforme automatiche dalla copia aggiornata più di recente; le eliminazioni restano, salvo modifiche successive; impostazioni: vince la versione più recente. Conflitti (due salvataggi insieme): si riscarica, si riunisce e si riprova. Il token (fine-grained, solo «Contents: Read and write» su quel repository) resta nel dispositivo; l'app rifiuta repository pubblici.
+- Esportazione: copia completa (JSON) e tabella per Excel (CSV con punto e virgola e accenti corretti).
 - Archiviazione: repository GitHub privato al posto di OneDrive (OneDrive obbligherebbe a riaccedere ogni 24 ore e richiede una registrazione Microsoft incerta). Possibile in futuro un pulsante per salvare una copia anche su OneDrive.
 - Navigazione: due pagine, **Da vedere** (comprende i film da rivedere, segnati con ↻) e **Visti**. Gli **abbandonati** si raggiungono solo da Impostazioni (o cercandoli per titolo).
 - Aggiunta: la priorità si sceglie subito, con un tocco, nel pannello del film. Anche i film da rivedere hanno una priorità.
@@ -31,7 +33,7 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - [x] **0 – Preparazione**: progetto e Git.
 - [x] **1 – Primo assaggio**: app installabile, ricerca TMDb, aggiunta a Da vedere/Visti, libreria a locandine, scheda film di base, funzionamento offline.
 - [x] **2 – Gestione**: voto con frase, riconoscimenti, commento, correzione date, piattaforme manuali, gestione riconoscimenti.
-- [ ] **3 – Solidità**: sincronizzazione con il repository privato, esportazione CSV.
+- [x] **3 – Solidità**: sincronizzazione con il repository privato, esportazione CSV.
 - [ ] **4 – Persone**: schede di attori, registi e compositori.
 - [ ] **5 – Import da Notion** (CSV).
 - [ ] Dopo: la Mensola, filtri e statistiche, serie TV, cortometraggi.
@@ -57,5 +59,7 @@ poi aprire <http://localhost:8000> nel browser. Sul computer locale la copia off
 | `css/app.css` | Aspetto grafico |
 | `js/archivio.js` | Struttura dei dati e regole per modificarli |
 | `js/tmdb.js`, `js/servizi.js` | Collegamento a TMDb e aggiornamenti automatici |
+| `js/sincronizzazione.js` | Salvataggio online nel repository GitHub privato |
+| `js/esporta.js` | Copie scaricabili (JSON e CSV) |
 | `js/viste/` | Le schermate: libreria, aggiungi, film, impostazioni |
 | `strumenti/` | Generatore delle icone e controlli |

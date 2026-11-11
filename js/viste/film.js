@@ -36,7 +36,8 @@ export function vistaFilm(id) {
   }
 
   disegna();
-  const stacca = archivio.ascolta(cambiato => { if (cambiato === id) disegna(); });
+  // null = è cambiato tutto l'archivio (per esempio, novità arrivate dall'altro dispositivo).
+  const stacca = archivio.ascolta(cambiato => { if (cambiato === id || cambiato === null) disegna(); });
   return {
     el,
     smonta: stacca,

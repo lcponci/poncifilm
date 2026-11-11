@@ -1,10 +1,12 @@
-// Impostazioni: riconoscimenti, copia dei dati, chiave TMDb, informazioni sull'app.
+// Impostazioni: salvataggio online, riconoscimenti, copie dei dati, chiave TMDb, informazioni.
 
-import { h, icona, avviso, apriFoglio } from '../ui.js';
+import { h, icona, avviso, apriFoglio, formattaData } from '../ui.js';
 import { intestazione } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { chiaveAttuale, impostaChiave, verificaChiave, haChiave } from '../tmdb.js';
 import { completaInSospeso } from '../servizi.js';
+import * as sincro from '../sincronizzazione.js';
+import { esportaJson, esportaCsv } from '../esporta.js';
 import { VERSIONE_APP } from '../versione.js';
 
 export function vistaImpostazioni() {
@@ -53,8 +55,10 @@ export function vistaImpostazioni() {
   const schedaDati = h('section', { class: 'scheda-info' },
       h('h2', null, 'I tuoi dati'),
       h('p', null, numero === 1 ? 'Nel tuo archivio c\'è 1 film.' : `Nel tuo archivio ci sono ${numero} film.`),
-      h('p', { class: 'nota' }, 'Per ora i dati sono salvati solo su questo dispositivo. La sincronizzazione online (con salvataggio di ogni versione) arriverà in una delle prossime versioni.'),
-      h('button', { type: 'button', class: 'pulsante secondario largo', onclick: esportaJson }, 'Scarica una copia dei dati'),
+      h('p', { class: 'nota' }, 'Puoi scaricare una copia in qualsiasi momento: completa, con tutti i dettagli (JSON), oppure come tabella da aprire con Excel (CSV).'),
+      h('div', { class: 'azioni due' },
+        h('button', { type: 'button', class: 'pulsante secondario', onclick: esportaJson }, 'Copia completa'),
+        h('button', { type: 'button', class: 'pulsante secondario', onclick: esportaCsv }, 'Tabella Excel')),
       h('a', { class: 'riga-link', href: '#/abbandonati' },
         h('span', null, 'Film abbandonati'),
         h('span', { class: 'riga-link-valore' }, String(abbandonati), icona('indietro', 'icona freccia'))));
@@ -68,12 +72,126 @@ export function vistaImpostazioni() {
         h('a', { href: 'https://www.justwatch.com', target: '_blank', rel: 'noopener' }, 'JustWatch'), '.'));
 
   // Finché manca la chiave TMDb è la cosa più importante; dopo scende in basso.
-  const schede = haChiave()
-    ? [schedaRiconoscimenti(), schedaDati, schedaChiave, schedaInformazioni]
-    : [schedaChiave, schedaRiconoscimenti(), schedaDati, schedaInformazioni];
+  // Il salvataggio online sta in alto finché non è collegato.
+  const salvataggio = schedaSalvataggio();
+  const schede = !haChiave()
+    ? [schedaChiave, salvataggio.el, schedaRiconoscimenti(), schedaDati, schedaInformazioni]
+    : sincro.configurata()
+      ? [schedaRiconoscimenti(), salvataggio.el, schedaDati, schedaChiave, schedaInformazioni]
+      : [salvataggio.el, schedaRiconoscimenti(), schedaDati, schedaChiave, schedaInformazioni];
   const el = h('section', { class: 'vista impostazioni' }, intestazione('Impostazioni', { indietro: true }), schede);
 
-  return { el };
+  return { el, smonta: salvataggio.smonta };
+}
+
+// ---------------------------------------------------------------- salvataggio online
+
+const LINK_NUOVO_REPO = 'https://github.com/new';
+const LINK_NUOVO_TOKEN = 'https://github.com/settings/personal-access-tokens/new';
+
+function descriviStato(st) {
+  if (st.fase === 'in-corso') return { testo: 'Salvataggio in corso…' };
+  if (st.fase === 'in-attesa') return { testo: 'Modifiche in attesa: le salvo tra pochi secondi.' };
+  if (st.fase === 'offline') return { testo: 'Sei offline: salverò appena torna la connessione.' };
+  if (st.fase === 'errore') return { testo: st.errore, errore: true };
+  if (st.ultima) {
+    const quando = new Date(st.ultima);
+    const ora = quando.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    const giorno = quando.toDateString() === new Date().toDateString() ? 'oggi' : `il ${formattaData(st.ultima)}`;
+    return { testo: `✓ Tutto salvato · ultimo controllo ${giorno} alle ${ora}` };
+  }
+  return { testo: 'Non ancora sincronizzato.' };
+}
+
+function schedaSalvataggio() {
+  const scheda = h('section', { class: 'scheda-info' });
+  let stacca = null;
+
+  function disegna() {
+    stacca?.();
+    stacca = null;
+    if (sincro.configurata()) disegnaCollegato();
+    else disegnaDaCollegare();
+  }
+
+  function disegnaCollegato() {
+    const stato = h('p', { class: 'nota', 'aria-live': 'polite' });
+    const aggiorna = st => {
+      const d = descriviStato(st);
+      stato.className = d.errore ? 'nota errore' : 'nota';
+      stato.textContent = d.testo;
+    };
+    aggiorna(sincro.statoAttuale());
+    stacca = sincro.ascoltaStato(aggiorna);
+
+    scheda.replaceChildren(
+      h('h2', null, 'Salvataggio online'),
+      h('p', null, 'Collegato a ', h('strong', null, sincro.repositoryCollegato()), ' (privato).'),
+      stato,
+      h('button', { type: 'button', class: 'pulsante largo', onclick: () => sincro.sincronizza() }, icona('ripeti'), 'Sincronizza ora'),
+      h('a', { class: 'riga-link', href: sincro.indirizzoVersioni(), target: '_blank', rel: 'noopener' },
+        h('span', null, 'Versioni salvate su GitHub'),
+        h('span', { class: 'riga-link-valore' }, icona('indietro', 'icona freccia'))),
+      h('button', {
+        type: 'button', class: 'pulsante-testo pericolo scollega',
+        onclick: () => {
+          if (!confirm('Scollegare questo dispositivo dal salvataggio online? I dati restano qui e su GitHub; per ricollegarlo servirà di nuovo il token.')) return;
+          sincro.scollega();
+          avviso('Dispositivo scollegato');
+          disegna();
+        },
+      }, 'Scollega questo dispositivo'));
+  }
+
+  function disegnaDaCollegare() {
+    const campoRepo = h('input', {
+      type: 'text', class: 'campo', placeholder: 'utente/nome, es. lcponci/poncifilm-dati', 'aria-label': 'Repository GitHub',
+      autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false',
+    });
+    const campoToken = h('input', {
+      type: 'password', class: 'campo', placeholder: 'github_pat_…', 'aria-label': 'Token GitHub',
+      autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false',
+    });
+    const esito = h('p', { class: 'nota', 'aria-live': 'polite' });
+    const pulsante = h('button', { type: 'button', class: 'pulsante largo', onclick: collega }, 'Collega');
+
+    async function collega() {
+      esito.className = 'nota';
+      esito.textContent = 'Controllo il collegamento e unisco i dati…';
+      pulsante.disabled = true;
+      try {
+        await sincro.collega(campoRepo.value, campoToken.value);
+        avviso('Salvataggio online attivo');
+        disegna();
+      } catch (errore) {
+        esito.className = 'nota errore';
+        esito.textContent = errore.message;
+        if (sincro.configurata()) disegna(); // collegato, ma il primo salvataggio non è riuscito
+      } finally {
+        pulsante.disabled = false;
+      }
+    }
+
+    const link = (href, testo) => h('a', { href, target: '_blank', rel: 'noopener' }, testo);
+    scheda.replaceChildren(
+      h('h2', null, 'Salvataggio online'),
+      h('p', { class: 'nota' }, 'Per ora i dati sono solo su questo dispositivo. Collegando un tuo repository GitHub privato, ogni modifica viene salvata online (con tutte le versioni precedenti) e iPhone e computer restano allineati.'),
+      h('ol', { class: 'passi' },
+        h('li', null, link(LINK_NUOVO_REPO, 'Crea un repository'), ' chiamato ', h('strong', null, 'poncifilm-dati'),
+          ', scegli ', h('strong', null, 'Private'), ' e spunta «Add a README file».'),
+        h('li', null, link(LINK_NUOVO_TOKEN, 'Crea un token'), ': nome «PonciFilm», scadenza «No expiration», ',
+          '«Only select repositories» → poncifilm-dati, e in «Repository permissions» → ',
+          h('strong', null, 'Contents: Read and write'), '.'),
+        h('li', null, 'Copia il token (inizia con «github_pat_») e incollalo qui sotto, con il nome del repository.')),
+      campoRepo,
+      campoToken,
+      pulsante,
+      esito,
+      h('p', { class: 'nota piccola' }, 'Il token resta solo su questo dispositivo e apre soltanto quel repository. Sul secondo dispositivo (es. il computer) ripeti solo il passo 3.'));
+  }
+
+  disegna();
+  return { el: scheda, smonta: () => stacca?.() };
 }
 
 // ---------------------------------------------------------------- riconoscimenti
@@ -152,25 +270,4 @@ function modificaRiconoscimento(r, dopo) {
     h('div', { class: 'azioni due' },
       h('button', { type: 'button', class: 'pulsante secondario pericolo', onclick: elimina }, 'Elimina'),
       h('button', { type: 'button', class: 'pulsante', onclick: salva }, 'Salva'))));
-}
-
-// Scarica l'intero archivio in un file JSON (sull'iPhone apre il menu "Condividi").
-async function esportaJson() {
-  const nome = `poncifilm-${archivio.oggi()}.json`;
-  const file = new File([JSON.stringify(archivio.archivioCorrente(), null, 2)], nome, { type: 'application/json' });
-  const suIphone = navigator.standalone !== undefined;
-  if (suIphone && navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: nome });
-      return;
-    } catch (errore) {
-      if (errore.name === 'AbortError') return;
-    }
-  }
-  const url = URL.createObjectURL(file);
-  const link = h('a', { href: url, download: nome });
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

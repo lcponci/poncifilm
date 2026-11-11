@@ -3,6 +3,7 @@
 import { carica, opera, ascolta } from './archivio.js';
 import { chiediSpazioPermanente } from './db.js';
 import { completaInSospeso } from './servizi.js';
+import { avviaSincronizzazione } from './sincronizzazione.js';
 import { icona } from './ui.js';
 import { vistaElenco } from './viste/libreria.js';
 import { vistaAggiungi } from './viste/aggiungi.js';
@@ -130,6 +131,7 @@ async function avvia() {
   mostra();
 
   chiediSpazioPermanente();
+  avviaSincronizzazione();
   registraServiceWorker();
   // Film aggiunti senza connessione: completo le informazioni appena possibile.
   setTimeout(completaInSospeso, 1500);
