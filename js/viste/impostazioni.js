@@ -1,6 +1,7 @@
 // Impostazioni: chiave TMDb, copia dei dati, informazioni sull'app.
 
-import { h, avviso } from '../ui.js';
+import { h, icona, avviso } from '../ui.js';
+import { intestazione } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { chiaveAttuale, impostaChiave, verificaChiave } from '../tmdb.js';
 import { completaInSospeso } from '../servizi.js';
@@ -36,9 +37,10 @@ export function vistaImpostazioni() {
   }
 
   const numero = archivio.opere().length;
+  const abbandonati = archivio.opere().filter(o => o.stato === 'abbandonato').length;
 
   const el = h('section', { class: 'vista impostazioni' },
-    h('header', { class: 'intestazione' }, h('h1', null, 'Impostazioni')),
+    intestazione('Impostazioni', { indietro: true }),
 
     h('section', { class: 'scheda-info' },
       h('h2', null, 'Chiave TMDb'),
@@ -55,7 +57,10 @@ export function vistaImpostazioni() {
       h('h2', null, 'I tuoi dati'),
       h('p', null, numero === 1 ? 'Nel tuo archivio c\'è 1 film.' : `Nel tuo archivio ci sono ${numero} film.`),
       h('p', { class: 'nota' }, 'Per ora i dati sono salvati solo su questo dispositivo. La sincronizzazione online (con salvataggio di ogni versione) arriverà in una delle prossime versioni.'),
-      h('button', { type: 'button', class: 'pulsante secondario largo', onclick: esportaJson }, 'Scarica una copia dei dati')),
+      h('button', { type: 'button', class: 'pulsante secondario largo', onclick: esportaJson }, 'Scarica una copia dei dati'),
+      h('a', { class: 'riga-link', href: '#/abbandonati' },
+        h('span', null, 'Film abbandonati'),
+        h('span', { class: 'riga-link-valore' }, String(abbandonati), icona('indietro', 'icona freccia')))),
 
     h('section', { class: 'scheda-info' },
       h('h2', null, 'Informazioni'),

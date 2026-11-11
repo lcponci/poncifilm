@@ -1,7 +1,7 @@
 // Aggiungere un film: cerco il titolo, riconosco la locandina, tocco e scelgo.
 
 import { h, icona, avviso, apriFoglio } from '../ui.js';
-import { locandina, nomeStato } from '../componenti.js';
+import { locandina, nomeStato, descrizioneStato, datiPriorita, pulsantiPriorita } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { cercaFilm, haChiave } from '../tmdb.js';
 import { completaFilm } from '../servizi.js';
@@ -116,23 +116,27 @@ function rigaRisultato(r) {
 function apriAnteprima(r) {
   const presente = archivio.opera(archivio.idFilm(r.tmdbId));
 
-  function aggiungi(stato) {
-    const o = archivio.aggiungiFilm(r, stato);
+  // Un tocco solo: "Da vedere" con la priorità scelta, oppure "Visto".
+  function aggiungi(stato, priorita = null) {
+    const o = archivio.aggiungiFilm(r, stato, priorita);
     foglio.chiudi();
-    avviso(stato === 'visto' ? `«${r.titolo}» aggiunto ai visti` : `«${r.titolo}» aggiunto ai film da vedere`,
-      { azione: { testo: 'Apri', href: `#/film/${o.id}` } });
+    avviso(stato === 'visto'
+      ? `«${r.titolo}» aggiunto ai visti`
+      : `«${r.titolo}» da vedere · ${datiPriorita(priorita)?.nome}`,
+    { azione: { testo: 'Apri', href: `#/film/${o.id}` } });
     completaFilm(o.id);
   }
 
   const azioni = presente
     ? h('div', { class: 'azioni' },
-        h('p', { class: 'nota' }, `È già nel tuo archivio: ${nomeStato(presente.stato)}.`),
+        h('p', { class: 'nota' }, `È già nel tuo archivio: ${descrizioneStato(presente).testo}.`),
         h('a', { class: 'pulsante largo', href: `#/film/${presente.id}` }, 'Apri la scheda'))
-    : h('div', { class: 'azioni due' },
-        h('button', { type: 'button', class: 'pulsante secondario', onclick: () => aggiungi('da-vedere') },
-          icona('segnalibro'), 'Da vedere'),
-        h('button', { type: 'button', class: 'pulsante', onclick: () => aggiungi('visto') },
-          icona('spunta'), 'Visto'));
+    : h('div', { class: 'azioni-aggiungi' },
+        h('div', { class: 'etichetta' }, 'Da vedere · scegli la priorità'),
+        pulsantiPriorita(null, p => aggiungi('da-vedere', p)),
+        h('div', { class: 'etichetta' }, 'Oppure'),
+        h('button', { type: 'button', class: 'pulsante largo', onclick: () => aggiungi('visto') },
+          icona('spunta'), 'L\'ho già visto'));
 
   const foglio = apriFoglio(h('div', { class: 'anteprima' },
     h('div', { class: 'anteprima-testa' },

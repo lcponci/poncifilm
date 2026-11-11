@@ -42,8 +42,21 @@ h1, h2 { margin: 0; line-height: 1.2; }
   padding: calc(var(--sicuro-alto) + 12px) 16px calc(var(--barra-h) + var(--sicuro-basso) + 28px);
 }
 
-.intestazione { margin: 4px 0 14px; }
-.intestazione h1 { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.intestazione { display: flex; align-items: center; gap: 10px; margin: 4px 0 4px; min-height: 44px; }
+.intestazione h1 { flex: 1; min-width: 0; font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.pulsante-icona {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--superficie);
+  color: var(--testo-2);
+}
+.riepilogo { margin: 0 0 12px; color: var(--testo-3); font-size: 14px; }
+.vista > .intestazione + .campo, .vista > .intestazione + .scheda-info { margin-top: 10px; }
 
 .icona { width: 22px; height: 22px; flex: none; }
 
@@ -86,21 +99,27 @@ h1, h2 { margin: 0; line-height: 1.2; }
 .pulsante-testo { background: none; border: 0; padding: 10px 0; font-weight: 600; }
 .pericolo { color: var(--pericolo); }
 
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip {
-  display: inline-flex;
+/* Pulsanti di scelta (priorità, stato): grandi, facili da toccare col pollice. */
+.priorita-scelta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.opzione {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  min-height: 38px;
-  padding: 0 14px;
-  border: 1px solid var(--bordo);
-  border-radius: 999px;
-  background: var(--superficie);
-  color: var(--testo-2);
+  min-height: 64px;
+  padding: 10px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--raggio);
+  background: var(--superficie-2);
   font-size: 14px;
   font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
 }
-.chip.attivo { background: var(--testo); border-color: var(--testo); color: var(--sfondo); }
+.opzione.riga { flex-direction: row; min-height: 52px; gap: 8px; }
+.opzione.attiva { border-color: var(--testo); background: var(--testo); color: var(--sfondo); }
+.opzione:active { transform: scale(.98); }
 
 .pallino { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
 
@@ -125,34 +144,9 @@ h1, h2 { margin: 0; line-height: 1.2; }
 
 /* ------------------------------------------------------------- libreria */
 
-/* Le quattro sezioni stanno sempre tutte sullo schermo: nome sopra, numero sotto. */
-.schede {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  margin: 14px 0 18px;
-  padding: 4px;
-  border-radius: 14px;
-  background: var(--superficie);
-}
-.scheda {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 0;
-  padding: 7px 2px;
-  border-radius: 10px;
-  color: var(--testo-2);
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-.scheda.attiva { background: var(--testo); color: var(--sfondo); }
-.scheda .conteggio { margin: 1px 0 0; font-size: 12px; }
 .conteggio { margin-left: 6px; opacity: .65; font-weight: 500; }
 
-.contenuto { margin-top: 14px; }
-.schede + .contenuto { margin-top: 0; }
+.contenuto { margin-top: 20px; }
 
 .gruppo + .gruppo { margin-top: 26px; }
 .titolo-gruppo {
@@ -203,6 +197,19 @@ h1, h2 { margin: 0; line-height: 1.2; }
   border-radius: 50%;
   box-shadow: 0 0 0 2px rgba(0, 0, 0, .55);
 }
+.badge-rivedere {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(14, 15, 17, .78);
+  color: var(--accento);
+}
+.badge-rivedere .icona { width: 14px; height: 14px; stroke-width: 2.4; }
 .card-loghi { position: absolute; left: 5px; bottom: 5px; display: flex; gap: 4px; }
 .card-loghi .logo { width: 22px; height: 22px; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .4); }
 .card-titolo {
@@ -317,6 +324,12 @@ h1, h2 { margin: 0; line-height: 1.2; }
   overflow: hidden;
 }
 .azioni.due { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.azioni-aggiungi .etichetta { margin: 0 0 8px; }
+.azioni-aggiungi .priorita-scelta + .etichetta { margin-top: 16px; }
+
+.scelta-stato h2 { margin-bottom: 16px; font-size: 19px; }
+.scelta-stato .etichetta { margin: 0 0 8px; }
+.scelta-stato .etichetta ~ .etichetta { margin-top: 18px; }
 .azioni .nota { margin: 0 0 12px; }
 
 /* ------------------------------------------------------------- scheda film */
@@ -372,6 +385,38 @@ h1, h2 { margin: 0; line-height: 1.2; }
   border-radius: 16px;
   background: var(--superficie);
 }
+.pulsante-stato {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
+  padding: 10px 14px;
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  background: var(--superficie-2);
+  text-align: left;
+}
+.pulsante-stato .pallino { width: 12px; height: 12px; }
+.pulsante-stato > .icona { color: var(--testo-2); }
+.pulsante-stato-testo { display: flex; flex: 1; min-width: 0; flex-direction: column; font-weight: 700; }
+.etichetta-piccola { color: var(--testo-3); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.cambia { color: var(--accento); font-size: 14px; font-weight: 600; }
+
+.riga-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bordo);
+  color: var(--testo-2);
+  font-size: 15px;
+}
+.scheda-info a.riga-link { color: var(--testo-2); } /* discreto, non evidenziato */
+.riga-link-valore { display: inline-flex; align-items: center; gap: 4px; color: var(--testo-3); }
+.icona.freccia { width: 18px; height: 18px; transform: rotate(180deg); }
+
 .etichetta { margin-bottom: 8px; color: var(--testo-3); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .visioni { margin: 0; color: var(--testo-2); font-size: 14px; }
 

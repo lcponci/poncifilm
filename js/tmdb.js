@@ -66,8 +66,21 @@ export async function verificaChiave(chiaveDaProvare) {
 
 const annoDa = data => (data && /^\d{4}/.test(data) ? Number(data.slice(0, 4)) : null);
 
+// "dune 1984" o "dune (1984)" cerca la versione di quell'anno; se non trova nulla
+// riprova con il testo intero (così "Blade Runner 2049" funziona comunque).
 export async function cercaFilm(testo, signal) {
-  const dati = await chiama('/search/movie', { query: testo, language: 'it-IT', include_adult: 'false' }, { signal });
+  const conAnno = testo.match(/^(.*\S)\s+\(?((?:18|19|20)\d{2})\)?$/);
+  if (conAnno && Number(conAnno[2]) <= new Date().getFullYear() + 5) {
+    const risultati = await cerca(conAnno[1], signal, conAnno[2]);
+    if (risultati.length) return risultati;
+  }
+  return cerca(testo, signal);
+}
+
+async function cerca(testo, signal, anno = null) {
+  const dati = await chiama('/search/movie', {
+    query: testo, language: 'it-IT', include_adult: 'false', primary_release_year: anno,
+  }, { signal });
   return (dati.results || []).map(r => ({
     tmdbId: r.id,
     titolo: r.title || r.original_title || 'Senza titolo',

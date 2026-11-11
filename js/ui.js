@@ -29,6 +29,7 @@ const ICONE = {
   indietro: '<path d="M15 18l-6-6 6-6"/>',
   spunta: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   segnalibro: '<path d="M7 4h10v16l-5-4-5 4z"/>',
+  chiudi: '<path d="M6 6l12 12M18 6L6 18"/>',
   ripeti: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
 };
 

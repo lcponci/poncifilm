@@ -14,6 +14,10 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 ## Decisioni prese
 
 - Archiviazione: repository GitHub privato al posto di OneDrive (OneDrive obbligherebbe a riaccedere ogni 24 ore e richiede una registrazione Microsoft incerta). Possibile in futuro un pulsante per salvare una copia anche su OneDrive.
+- Navigazione: due pagine, **Da vedere** (comprende i film da rivedere, segnati con ↻) e **Visti**. Gli **abbandonati** si raggiungono solo da Impostazioni (o cercandoli per titolo).
+- Aggiunta: la priorità si sceglie subito, con un tocco, nel pannello del film. Anche i film da rivedere hanno una priorità.
+- Scheda film: lo stato è un unico riquadro; toccandolo si scelgono stato e priorità. Ordine: trama, cast, regia e musica, dove vederlo, dettagli.
+- Ricerca: «titolo anno» (es. «dune 1984») cerca la versione di quell'anno.
 - Rivisioni: si conservano tutte le date di visione; voto e commento sono unici e aggiornabili.
 - Stato «Da vedere»; priorità: **Day one / Il prima possibile / Prima o poi**.
 - Colonna sonora: solo il compositore.

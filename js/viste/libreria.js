@@ -1,19 +1,32 @@
-// Schermata principale: la libreria a locandine, divisa per stato.
+// Le pagine elenco: "Da vedere" (con i film da rivedere), "Visti" e "Abbandonati".
 
 import { h, vuoto, normalizza } from '../ui.js';
-import { griglia } from '../componenti.js';
+import { griglia, intestazione } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { haChiave } from '../tmdb.js';
 import { preimpostaRicerca } from './aggiungi.js';
 
-const memoria = { testo: '' };
-
-const MESSAGGI_VUOTI = {
-  'da-vedere': 'Nessun film da vedere. Tocca «Aggiungi» per riempire la Watchlist.',
-  visto: 'Non hai ancora segnato nessun film come visto.',
-  'da-rivedere': 'Nessun film da rivedere.',
-  abbandonato: 'Nessun film abbandonato. Bene così!',
+export const PAGINE = {
+  'da-vedere': {
+    titolo: 'Da vedere',
+    stati: ['da-vedere', 'da-rivedere'],
+    vuoto: 'Nessun film da vedere. Tocca + per aggiungerne uno.',
+  },
+  visti: {
+    titolo: 'Visti',
+    stati: ['visto'],
+    vuoto: 'Non hai ancora segnato nessun film come visto.',
+  },
+  abbandonati: {
+    titolo: 'Abbandonati',
+    stati: ['abbandonato'],
+    vuoto: 'Nessun film abbandonato.',
+    secondaria: true, // raggiungibile solo dalle Impostazioni
+  },
 };
+
+// Testo cercato in ogni pagina (resta quando torni indietro da una scheda).
+const ricerche = {};
 
 const perAggiunta = (a, b) => (b.aggiuntoIl || '').localeCompare(a.aggiuntoIl || '');
 const perModifica = (a, b) => (b.modificatoIl || '').localeCompare(a.modificatoIl || '');
@@ -25,34 +38,21 @@ function corrisponde(o, testo) {
   return normalizza(o.info.titolo).includes(testo) || normalizza(o.info.titoloOriginale).includes(testo);
 }
 
-export function vistaLibreria(sezioneRichiesta) {
-  const imp = archivio.impostazioni();
-  const sezione = imp.stati.some(s => s.id === sezioneRichiesta) ? sezioneRichiesta : imp.stati[0].id;
+export function vistaElenco(pagina) {
+  const conf = PAGINE[pagina] ?? PAGINE['da-vedere'];
+  ricerche[pagina] ??= '';
 
   const campo = h('input', {
-    type: 'search', class: 'campo', placeholder: 'Cerca nel tuo archivio', value: memoria.testo,
+    type: 'search', class: 'campo', placeholder: 'Cerca nel tuo archivio', value: ricerche[pagina],
     autocomplete: 'off', enterkeyhint: 'search', 'aria-label': 'Cerca nel tuo archivio',
-    oninput: e => { memoria.testo = e.target.value; disegnaContenuto(); },
+    oninput: e => { ricerche[pagina] = e.target.value; disegna(); },
     onkeydown: e => { if (e.key === 'Enter') e.target.blur(); },
   });
-  const schede = h('div', { class: 'schede', role: 'tablist' });
+  const riepilogo = h('p', { class: 'riepilogo' });
   const contenuto = h('div', { class: 'contenuto' });
   const el = h('section', { class: 'vista' },
-    h('header', { class: 'intestazione' }, h('h1', null, 'PonciFilm')),
-    campo, schede, contenuto);
-
-  function disegnaSchede() {
-    const conteggi = {};
-    for (const o of archivio.opere()) conteggi[o.stato] = (conteggi[o.stato] || 0) + 1;
-    schede.replaceChildren(...imp.stati.map(s => h('a', {
-      href: `#/libreria/${s.id}`,
-      class: 'scheda' + (s.id === sezione ? ' attiva' : ''),
-      role: 'tab',
-      'aria-selected': String(s.id === sezione),
-      // Cambiare scheda non aggiunge passi alla cronologia del "torna indietro".
-      onclick: e => { e.preventDefault(); location.replace(`#/libreria/${s.id}`); },
-    }, s.sezione, h('span', { class: 'conteggio' }, conteggi[s.id] || 0))));
-  }
+    intestazione(conf.titolo, conf.secondaria ? { indietro: '#/impostazioni' } : { impostazioni: true }),
+    riepilogo, campo, contenuto);
 
   function benvenuto() {
     if (!haChiave()) {
@@ -63,20 +63,30 @@ export function vistaLibreria(sezioneRichiesta) {
     }
     return h('div', { class: 'scheda-info' },
       h('h2', null, 'L\'archivio è vuoto'),
-      h('p', null, 'Tocca «Aggiungi» in basso e cerca il primo film.'),
+      h('p', null, 'Tocca + in basso e cerca il primo film.'),
       h('a', { class: 'pulsante', href: '#/aggiungi' }, 'Aggiungi un film'));
   }
 
-  function disegnaContenuto() {
-    const tutte = archivio.opere();
-    const testo = normalizza(memoria.testo.trim());
-    schede.hidden = Boolean(testo);
+  function aggiornaRiepilogo(elenco) {
+    const rivedere = elenco.filter(o => o.stato === 'da-rivedere').length;
+    riepilogo.textContent = [
+      elenco.length === 1 ? '1 film' : `${elenco.length} film`,
+      rivedere ? `${rivedere} da rivedere` : null,
+    ].filter(Boolean).join(' · ');
+  }
 
-    if (!tutte.length) {
+  function disegna() {
+    const tutte = archivio.opere();
+    const elenco = tutte.filter(o => conf.stati.includes(o.stato));
+    aggiornaRiepilogo(elenco);
+    const testo = normalizza(ricerche[pagina].trim());
+
+    if (!tutte.length && !conf.secondaria) {
       contenuto.replaceChildren(benvenuto());
       return;
     }
 
+    // La ricerca guarda in tutto l'archivio, anche fuori da questa pagina.
     if (testo) {
       const trovate = tutte.filter(o => corrisponde(o, testo)).sort(perTitolo);
       contenuto.replaceChildren(
@@ -85,21 +95,20 @@ export function vistaLibreria(sezioneRichiesta) {
           : vuoto(h('p', null, 'Nessun film con questo titolo nel tuo archivio.')),
         h('div', { class: 'centrato' }, h('a', {
           class: 'pulsante secondario', href: '#/aggiungi',
-          onclick: () => preimpostaRicerca(memoria.testo.trim()),
-        }, `Cerca «${memoria.testo.trim()}» su TMDb`)),
+          onclick: () => preimpostaRicerca(ricerche[pagina].trim()),
+        }, `Cerca «${ricerche[pagina].trim()}» su TMDb`)),
       );
       return;
     }
 
-    const elenco = tutte.filter(o => o.stato === sezione);
     if (!elenco.length) {
-      contenuto.replaceChildren(vuoto(h('p', null, MESSAGGI_VUOTI[sezione] || 'Nessun film in questa sezione.')));
+      contenuto.replaceChildren(vuoto(h('p', null, conf.vuoto)));
       return;
     }
 
-    if (sezione === 'da-vedere') {
-      // Watchlist divisa per priorità: aiuta a scegliere cosa guardare stasera.
-      contenuto.replaceChildren(...imp.priorita.map(p => {
+    if (pagina === 'da-vedere') {
+      // Divisi per priorità: aiuta a scegliere cosa guardare stasera.
+      contenuto.replaceChildren(...archivio.impostazioni().priorita.map(p => {
         const gruppo = elenco.filter(o => archivio.prioritaDi(o) === p.id).sort(perAggiunta);
         if (!gruppo.length) return null;
         return h('div', { class: 'gruppo' },
@@ -107,17 +116,15 @@ export function vistaLibreria(sezioneRichiesta) {
             h('span', { class: 'pallino', style: { background: p.colore } }),
             p.nome,
             h('span', { class: 'conteggio' }, gruppo.length)),
-          griglia(gruppo, { mostraPriorita: true, mostraPiattaforme: true }));
+          griglia(gruppo, { mostraPiattaforme: true }));
       }).filter(Boolean));
       return;
     }
 
-    const ordinati = sezione === 'visto' ? elenco.sort(perVisione) : elenco.sort(perModifica);
-    contenuto.replaceChildren(griglia(ordinati, {}));
+    contenuto.replaceChildren(griglia(elenco.sort(pagina === 'visti' ? perVisione : perModifica), {}));
   }
 
-  disegnaSchede();
-  disegnaContenuto();
-  const stacca = archivio.ascolta(() => { disegnaSchede(); disegnaContenuto(); });
+  disegna();
+  const stacca = archivio.ascolta(disegna);
   return { el, smonta: stacca, ricordaScorrimento: true };
 }

@@ -1,7 +1,7 @@
 // Scheda di un film del tuo archivio.
 
 import { h, icona, avviso, formattaData, formattaDurata, nomePaese, stelle } from '../ui.js';
-import { locandina, logoPiattaforma } from '../componenti.js';
+import { locandina, logoPiattaforma, descrizioneStato, segnoStato, apriSceltaStato } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { immagine, haChiave } from '../tmdb.js';
 import { completaFilm, aggiornaPiattaformeFilm } from '../servizi.js';
@@ -75,12 +75,12 @@ function contenuto(o) {
     i.trama && sezione('Trama', h('p', { class: 'trama' },
       i.tramaLingua === 'en' && h('span', { class: 'lingua', title: 'Trama disponibile solo in inglese' }, 'EN'),
       i.trama)),
-    sezionePiattaforme(o),
     i.cast?.length > 0 && sezione('Cast', elencoPersone(i.cast.map(p => ({ ...p, ruolo: p.personaggio })))),
     (regia.length > 0 || musica.length > 0) && sezione('Regia e musica', elencoPersone([
       ...regia.map(p => ({ ...p, ruolo: 'Regia' })),
       ...musica.map(p => ({ ...p, ruolo: 'Musica' })),
     ])),
+    sezionePiattaforme(o),
     sezioneDettagli(i),
     h('div', { class: 'zona-rimozione' },
       h('button', { type: 'button', class: 'pulsante-testo pericolo', onclick: () => chiediRimozione(o) },
@@ -89,33 +89,22 @@ function contenuto(o) {
 }
 
 function pannelloAzioni(o) {
-  const imp = archivio.impostazioni();
   const parti = [];
 
-  parti.push(h('div', { class: 'chips', role: 'group', 'aria-label': 'Stato' }, imp.stati.map(s =>
-    h('button', {
-      type: 'button',
-      class: 'chip' + (o.stato === s.id ? ' attivo' : ''),
-      'aria-pressed': String(o.stato === s.id),
-      onclick: () => archivio.cambiaStato(o.id, s.id),
-    }, s.nome))));
+  // Lo stato occupa un solo spazio: toccandolo si sceglie stato e priorità.
+  const descrizione = descrizioneStato(o);
+  parti.push(h('button', { type: 'button', class: 'pulsante-stato', onclick: () => apriSceltaStato(o) },
+    segnoStato(descrizione),
+    h('span', { class: 'pulsante-stato-testo' },
+      h('span', { class: 'etichetta-piccola' }, 'Stato'),
+      h('span', null, descrizione.testo)),
+    h('span', { class: 'cambia' }, 'Cambia')));
 
-  if (o.stato === 'da-vedere') {
+  if (o.stato === 'da-vedere' || o.stato === 'da-rivedere') {
     parti.push(h('button', {
       type: 'button', class: 'pulsante largo grande',
       onclick: () => { archivio.segnaVisto(o.id); avviso('Segnato come visto oggi'); },
     }, icona('spunta'), 'Segna come visto'));
-
-    const attuale = archivio.prioritaDi(o);
-    parti.push(h('div', { class: 'blocco' },
-      h('div', { class: 'etichetta' }, 'Priorità'),
-      h('div', { class: 'chips', role: 'group', 'aria-label': 'Priorità' }, imp.priorita.map(p =>
-        h('button', {
-          type: 'button',
-          class: 'chip' + (attuale === p.id ? ' attivo' : ''),
-          'aria-pressed': String(attuale === p.id),
-          onclick: () => archivio.modifica(o.id, { priorita: p.id }),
-        }, h('span', { class: 'pallino', style: { background: p.colore } }), p.nome)))));
   }
 
   if (o.visioni.length) {
@@ -123,7 +112,7 @@ function pannelloAzioni(o) {
     parti.push(h('p', { class: 'visioni' }, o.visioni.length === 1 ? 'Visto il ' : 'Visioni: ', date.join(' · ')));
   }
 
-  if (o.stato === 'visto' || o.stato === 'da-rivedere') {
+  if (o.stato === 'visto') {
     const giaOggi = o.visioni.includes(archivio.oggi());
     parti.push(h('button', {
       type: 'button', class: 'pulsante secondario largo', disabled: giaOggi,

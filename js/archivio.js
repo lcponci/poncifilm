@@ -170,7 +170,7 @@ function aggiungiVisione(o, data) {
 
 // Aggiunge un film partendo da un risultato di ricerca TMDb.
 // Le informazioni complete arrivano subito dopo (vedi servizi.js).
-export function aggiungiFilm(risultato, stato) {
+export function aggiungiFilm(risultato, stato, priorita = null) {
   const id = idFilm(risultato.tmdbId);
   if (archivio.opere[id]) return archivio.opere[id];
   const ora = adesso();
@@ -191,7 +191,7 @@ export function aggiungiFilm(risultato, stato) {
     infoCompleta: false,
     piattaforme: { auto: null, aggiornateIl: null, aggiunte: [], nascoste: [] },
     stato,
-    priorita: archivio.impostazioni.prioritaPredefinita,
+    priorita: priorita || archivio.impostazioni.prioritaPredefinita,
     voto: null,
     riconoscimenti: [],
     commento: '',
@@ -213,12 +213,17 @@ export function modifica(id, cambi) {
   tocca(o);
 }
 
-// Cambiare lo stato in "Visto" registra da solo la data di oggi.
-export function cambiaStato(id, stato) {
+// Cambia stato ed eventualmente priorità (che vale per "Da vedere" e "Da rivedere").
+// Passare a "Visto" registra da solo la data di oggi.
+export function impostaStato(id, stato, priorita = null) {
   const o = opera(id);
-  if (!o || o.stato === stato) return;
-  if (stato === 'visto') aggiungiVisione(o, oggi());
+  if (!o) return;
+  const nuovoStato = o.stato !== stato;
+  const nuovaPriorita = Boolean(priorita) && o.priorita !== priorita;
+  if (!nuovoStato && !nuovaPriorita) return;
+  if (nuovoStato && stato === 'visto') aggiungiVisione(o, oggi());
   o.stato = stato;
+  if (priorita) o.priorita = priorita;
   tocca(o);
 }
 

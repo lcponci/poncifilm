@@ -1,23 +1,33 @@
 // Avvio dell'app e passaggio da una schermata all'altra.
 
-import { carica } from './archivio.js';
+import { carica, opera, ascolta } from './archivio.js';
 import { chiediSpazioPermanente } from './db.js';
 import { completaInSospeso } from './servizi.js';
 import { icona } from './ui.js';
-import { vistaLibreria } from './viste/libreria.js';
+import { vistaElenco } from './viste/libreria.js';
 import { vistaAggiungi } from './viste/aggiungi.js';
 import { vistaFilm } from './viste/film.js';
 import { vistaImpostazioni } from './viste/impostazioni.js';
 
 const contenitore = document.getElementById('vista');
 
+// Nella scheda di un film si illumina la pagina a cui il film appartiene.
+function voceDelFilm(m) {
+  const stato = opera(m[1])?.stato;
+  if (stato === 'visto') return 'visti';
+  if (stato === 'da-vedere' || stato === 'da-rivedere') return 'da-vedere';
+  return null;
+}
+
 // Indirizzo (dopo il #) → schermata da mostrare e voce della barra in basso da evidenziare.
 const ROTTE = [
-  [/^#?\/?$/, () => vistaLibreria('da-vedere'), 'libreria'],
-  [/^#\/libreria\/([\w-]+)$/, m => vistaLibreria(m[1]), 'libreria'],
+  [/^#?\/?$/, () => vistaElenco('da-vedere'), 'da-vedere'],
+  [/^#\/da-vedere$/, () => vistaElenco('da-vedere'), 'da-vedere'],
+  [/^#\/visti$/, () => vistaElenco('visti'), 'visti'],
+  [/^#\/abbandonati$/, () => vistaElenco('abbandonati'), null],
   [/^#\/aggiungi$/, () => vistaAggiungi(), 'aggiungi'],
-  [/^#\/film\/([\w-]+)$/, m => vistaFilm(m[1]), 'libreria'],
-  [/^#\/impostazioni$/, () => vistaImpostazioni(), 'impostazioni'],
+  [/^#\/film\/([\w-]+)$/, m => vistaFilm(m[1]), voceDelFilm],
+  [/^#\/impostazioni$/, () => vistaImpostazioni(), null],
 ];
 
 let vistaAttuale = null;
@@ -40,10 +50,19 @@ function mostra() {
   contenitore.replaceChildren(vistaAttuale.el);
   window.scrollTo(0, vistaAttuale.ricordaScorrimento ? scorrimenti.get(indirizzo) ?? 0 : 0);
 
-  for (const link of document.querySelectorAll('.barra a')) {
-    link.classList.toggle('attivo', link.dataset.sezione === rotta.voce);
-  }
+  rottaAttuale = rotta;
+  aggiornaBarra();
   vistaAttuale.montata?.();
+}
+
+// Evidenzia la voce giusta della barra in basso (anche dopo un cambio di stato).
+let rottaAttuale = null;
+function aggiornaBarra() {
+  if (!rottaAttuale) return;
+  const voce = typeof rottaAttuale.voce === 'function' ? rottaAttuale.voce(rottaAttuale.m) : rottaAttuale.voce;
+  for (const link of document.querySelectorAll('.barra a')) {
+    link.classList.toggle('attivo', link.dataset.sezione === voce);
+  }
 }
 
 function preparaBarra() {
@@ -92,6 +111,7 @@ async function avvia() {
     return;
   }
   window.addEventListener('hashchange', mostra);
+  ascolta(aggiornaBarra);
   mostra();
 
   chiediSpazioPermanente();
