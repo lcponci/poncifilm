@@ -7,11 +7,13 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 
 - **App web installabile** (PWA): sull'iPhone si apre l'indirizzo in Safari → Condividi → «Aggiungi alla schermata Home».
 - **HTML, CSS e JavaScript semplici**, senza compilazione né framework: si modifica e si pubblica così com'è.
-- **Dati**: per ora nel browser del dispositivo (IndexedDB). Dalla fase 3 in un file `poncifilm.json` su OneDrive.
+- **Indirizzo**: <https://lcponci.github.io/poncifilm/> (GitHub Pages, da questo repository pubblico).
+- **Dati**: per ora nel browser del dispositivo (IndexedDB). Dalla fase 3 in un file JSON dentro un **repository GitHub privato** separato: ogni salvataggio diventa una versione recuperabile.
 - **TMDb** per titoli, trame, locandine, cast, regia, compositore, saga e piattaforme in Italia (dati JustWatch).
 
 ## Decisioni prese
 
+- Archiviazione: repository GitHub privato al posto di OneDrive (OneDrive obbligherebbe a riaccedere ogni 24 ore e richiede una registrazione Microsoft incerta). Possibile in futuro un pulsante per salvare una copia anche su OneDrive.
 - Rivisioni: si conservano tutte le date di visione; voto e commento sono unici e aggiornabili.
 - Stato «Da vedere»; priorità: **Day one / Il prima possibile / Prima o poi**.
 - Colonna sonora: solo il compositore.
@@ -23,7 +25,7 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - [x] **0 – Preparazione**: progetto e Git.
 - [x] **1 – Primo assaggio**: app installabile, ricerca TMDb, aggiunta a Da vedere/Visti, libreria a locandine, scheda film di base, funzionamento offline.
 - [ ] **2 – Gestione**: voto con frase, riconoscimenti, commento, correzione date, piattaforme manuali, gestione riconoscimenti.
-- [ ] **3 – Solidità**: sincronizzazione OneDrive, backup automatici, esportazione CSV.
+- [ ] **3 – Solidità**: sincronizzazione con il repository privato, esportazione CSV.
 - [ ] **4 – Persone**: schede di attori, registi e compositori.
 - [ ] **5 – Import da Notion** (CSV).
 - [ ] Dopo: la Mensola, filtri e statistiche, serie TV, cortometraggi.

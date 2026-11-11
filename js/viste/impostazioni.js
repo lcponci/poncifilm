@@ -54,7 +54,7 @@ export function vistaImpostazioni() {
     h('section', { class: 'scheda-info' },
       h('h2', null, 'I tuoi dati'),
       h('p', null, numero === 1 ? 'Nel tuo archivio c\'è 1 film.' : `Nel tuo archivio ci sono ${numero} film.`),
-      h('p', { class: 'nota' }, 'Per ora i dati sono salvati solo su questo dispositivo. La sincronizzazione con OneDrive arriverà in una delle prossime versioni.'),
+      h('p', { class: 'nota' }, 'Per ora i dati sono salvati solo su questo dispositivo. La sincronizzazione online (con salvataggio di ogni versione) arriverà in una delle prossime versioni.'),
       h('button', { type: 'button', class: 'pulsante secondario largo', onclick: esportaJson }, 'Scarica una copia dei dati')),
 
     h('section', { class: 'scheda-info' },
