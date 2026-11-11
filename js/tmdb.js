@@ -223,6 +223,19 @@ export async function piattaformeFilm(tmdbId) {
   return piattaformeItalia(await chiama(`/movie/${tmdbId}/watch/providers`));
 }
 
+// Tutte le piattaforme disponibili in Italia (per aggiungerne una a mano).
+// Scaricato una volta sola finché l'app resta aperta.
+let catalogoPiattaforme = null;
+export function elencoPiattaforme() {
+  catalogoPiattaforme ??= chiama('/watch/providers/movie', { watch_region: 'IT', language: 'it-IT' })
+    .then(dati => (dati.results || [])
+      .map(p => ({ id: p.provider_id, nome: p.provider_name, logo: p.logo_path || null, ordine: p.display_priorities?.IT ?? p.display_priority ?? 999 }))
+      .sort((a, b) => a.ordine - b.ordine)
+      .map(({ ordine, ...p }) => p))
+    .catch(errore => { catalogoPiattaforme = null; throw errore; });
+  return catalogoPiattaforme;
+}
+
 const persona = p => ({ id: p.id, nome: p.name, foto: p.profile_path || null });
 
 function senzaDoppioni(elenco) {

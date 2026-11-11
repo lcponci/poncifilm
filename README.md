@@ -17,8 +17,10 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - Navigazione: due pagine, **Da vedere** (comprende i film da rivedere, segnati con ↻) e **Visti**. Gli **abbandonati** si raggiungono solo da Impostazioni (o cercandoli per titolo).
 - Aggiunta: la priorità si sceglie subito, con un tocco, nel pannello del film. Anche i film da rivedere hanno una priorità.
 - Scheda film: lo stato è un unico riquadro; toccandolo si scelgono stato e priorità. Ordine: trama, cast, regia e musica, dove vederlo, dettagli.
-- Ricerca: «titolo anno» (es. «dune 1984») cerca la versione di quell'anno.
-- Rivisioni: si conservano tutte le date di visione; voto e commento sono unici e aggiornabili.
+- Ricerca: «titolo anno» (es. «dune 1984») cerca la versione di quell'anno. I risultati sono ordinati per somiglianza al testo scritto (ignorando spazi, accenti e maiuscole) e notorietà; se nulla somiglia, l'app riprova da sola con varianti (spazi mancanti come «laland», ultima parola accorciata per gli errori di battitura).
+- Rivisioni: si conservano tutte le date di visione (correggibili a mano); voto e commento sono unici e aggiornabili.
+- Giudizio (stelle con frase, riconoscimenti, commento): nella scheda di ogni film non più «da vedere». Dopo «Segna come visto» o «L'ho già visto» si apre subito il pannello «Com'era?». Toccare di nuovo la stella scelta toglie il voto.
+- Riconoscimenti: si gestiscono in Impostazioni. Rinominare mantiene i collegamenti ai film; eliminare li toglie anche dai film.
 - Stato «Da vedere»; priorità: **Day one / Il prima possibile / Prima o poi**.
 - Colonna sonora: solo il compositore.
 - Piattaforme: aggiornate quando si apre la scheda del film (al massimo una volta l'ora), con correzioni manuali che non vengono sovrascritte.
@@ -28,7 +30,7 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 
 - [x] **0 – Preparazione**: progetto e Git.
 - [x] **1 – Primo assaggio**: app installabile, ricerca TMDb, aggiunta a Da vedere/Visti, libreria a locandine, scheda film di base, funzionamento offline.
-- [ ] **2 – Gestione**: voto con frase, riconoscimenti, commento, correzione date, piattaforme manuali, gestione riconoscimenti.
+- [x] **2 – Gestione**: voto con frase, riconoscimenti, commento, correzione date, piattaforme manuali, gestione riconoscimenti.
 - [ ] **3 – Solidità**: sincronizzazione con il repository privato, esportazione CSV.
 - [ ] **4 – Persone**: schede di attori, registi e compositori.
 - [ ] **5 – Import da Notion** (CSV).

@@ -31,6 +31,7 @@ const ICONE = {
   segnalibro: '<path d="M7 4h10v16l-5-4-5 4z"/>',
   chiudi: '<path d="M6 6l12 12M18 6L6 18"/>',
   ripeti: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+  matita: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
 };
 
 export function icona(nome, classe = 'icona') {
@@ -60,12 +61,15 @@ export function avviso(testo, { azione } = {}) {
 }
 
 // Pannello che sale dal basso.
-export function apriFoglio(contenuto) {
+// alChiudere: funzione chiamata quando il pannello si chiude (es. per salvare).
+export function apriFoglio(contenuto, { alChiudere } = {}) {
   const velo = h('div', { class: 'velo' });
   const pannello = h('div', { class: 'foglio', role: 'dialog', 'aria-modal': 'true' },
     h('div', { class: 'maniglia' }), contenuto);
   const tasto = e => { if (e.key === 'Escape') chiudi(); };
   function chiudi() {
+    if (!pannello.isConnected) return;
+    alChiudere?.();
     velo.remove();
     pannello.remove();
     document.removeEventListener('keydown', tasto);

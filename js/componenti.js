@@ -84,6 +84,88 @@ export function apriSceltaStato(o) {
   ));
 }
 
+// Il tuo giudizio su un film: stelle con la frase, riconoscimenti, commento.
+// Ogni tocco viene salvato subito; il commento mentre scrivi (e quando chiudi).
+// Restituisce { el, salva }: "salva" registra il commento ancora in sospeso.
+export function editorGiudizio(id) {
+  const imp = archivio.impostazioni();
+  const attuale = () => archivio.opera(id);
+
+  const frase = h('p', { class: 'frase-voto', 'aria-live': 'polite' });
+  const bottoniStelle = imp.voti.map(v => h('button', {
+    type: 'button', class: 'stella', 'aria-label': `${v.valore} su 5: ${v.frase}`,
+    onclick: () => {
+      // Toccare di nuovo la stella già scelta toglie il voto.
+      archivio.modifica(id, { voto: attuale()?.voto === v.valore ? null : v.valore });
+      aggiornaStelle();
+    },
+  }, '★'));
+  function aggiornaStelle() {
+    const voto = attuale()?.voto || 0;
+    bottoniStelle.forEach((b, i) => {
+      b.classList.toggle('piena', i < voto);
+      b.setAttribute('aria-pressed', String(i + 1 === voto));
+    });
+    frase.textContent = voto ? imp.voti.find(v => v.valore === voto)?.frase ?? '' : 'Tocca le stelle per dare un voto';
+    frase.classList.toggle('vuota', !voto);
+  }
+
+  const pillole = imp.riconoscimenti.map(r => h('button', {
+    type: 'button', class: 'pillola', 'data-id': r.id,
+    onclick: () => { archivio.alternaRiconoscimento(id, r.id); aggiornaPillole(); },
+  }, r.nome));
+  function aggiornaPillole() {
+    const scelti = attuale()?.riconoscimenti || [];
+    for (const b of pillole) {
+      const acceso = scelti.includes(b.dataset.id);
+      b.classList.toggle('attiva', acceso);
+      b.setAttribute('aria-pressed', String(acceso));
+    }
+  }
+
+  // Salva solo se hai scritto qui: così due riquadri aperti sullo stesso film
+  // (scheda e pannello "Com'era?") non si cancellano il commento a vicenda.
+  let timer = null;
+  let scritto = false;
+  const commento = h('textarea', {
+    class: 'campo commento', rows: '3', placeholder: 'Un commento, se ti va…', 'aria-label': 'Commento',
+    oninput: () => { scritto = true; clearTimeout(timer); timer = setTimeout(salva, 600); },
+    onblur: () => salva(),
+  });
+  commento.value = attuale()?.commento || '';
+  function salva() {
+    clearTimeout(timer);
+    if (!scritto) return;
+    scritto = false;
+    const testo = commento.value.trim();
+    if (attuale() && testo !== (attuale().commento || '')) archivio.modifica(id, { commento: testo });
+  }
+
+  aggiornaStelle();
+  aggiornaPillole();
+  const el = h('div', { class: 'giudizio' },
+    h('div', { class: 'stelle-voto', role: 'group', 'aria-label': 'Voto' }, bottoniStelle),
+    frase,
+    h('div', { class: 'etichetta' }, 'Riconoscimenti'),
+    h('div', { class: 'pillole' }, pillole),
+    h('div', { class: 'etichetta' }, 'Commento'),
+    commento);
+  return { el, salva };
+}
+
+// Pannello "Com'era?" che compare appena segni un film come visto.
+export function apriGiudizio(id, { messaggio = null } = {}) {
+  const o = archivio.opera(id);
+  if (!o) return;
+  const editor = editorGiudizio(id);
+  const foglio = apriFoglio(h('div', { class: 'foglio-giudizio' },
+    h('h2', null, 'Com\'era?'),
+    h('p', { class: 'nota' }, messaggio || o.info.titolo),
+    editor.el,
+    h('button', { type: 'button', class: 'pulsante largo', onclick: () => foglio.chiudi() }, 'Fatto')),
+  { alChiudere: editor.salva });
+}
+
 // Card a locandina per le griglie.
 export function cardFilm(o, { mostraPriorita = false, mostraPiattaforme = false, mostraStato = false } = {}) {
   const i = o.info;

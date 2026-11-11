@@ -1,7 +1,7 @@
 // Aggiungere un film: cerco il titolo, riconosco la locandina, tocco e scelgo.
 
 import { h, icona, avviso, apriFoglio } from '../ui.js';
-import { locandina, nomeStato, descrizioneStato, datiPriorita, pulsantiPriorita } from '../componenti.js';
+import { locandina, nomeStato, descrizioneStato, datiPriorita, pulsantiPriorita, apriGiudizio } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { cercaFilm, haChiave } from '../tmdb.js';
 import { completaFilm } from '../servizi.js';
@@ -120,11 +120,14 @@ function apriAnteprima(r) {
   function aggiungi(stato, priorita = null) {
     const o = archivio.aggiungiFilm(r, stato, priorita);
     foglio.chiudi();
-    avviso(stato === 'visto'
-      ? `«${r.titolo}» aggiunto ai visti`
-      : `«${r.titolo}» da vedere · ${datiPriorita(priorita)?.nome}`,
-    { azione: { testo: 'Apri', href: `#/film/${o.id}` } });
     completaFilm(o.id);
+    // Già visto: si passa subito al giudizio (voto, riconoscimenti, commento).
+    if (stato === 'visto') {
+      apriGiudizio(o.id, { messaggio: `«${r.titolo}» aggiunto ai visti` });
+      return;
+    }
+    avviso(`«${r.titolo}» da vedere · ${datiPriorita(priorita)?.nome}`,
+      { azione: { testo: 'Apri', href: `#/film/${o.id}` } });
   }
 
   const azioni = presente

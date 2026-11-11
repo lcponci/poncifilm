@@ -29,7 +29,8 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 a { color: inherit; text-decoration: none; }
-button { font: inherit; color: inherit; cursor: pointer; }
+button, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
 button:disabled { cursor: default; opacity: .55; }
 img { display: block; }
 h1, h2 { margin: 0; line-height: 1.2; }
@@ -423,6 +424,76 @@ h1, h2 { margin: 0; line-height: 1.2; }
 
 .etichetta { margin-bottom: 8px; color: var(--testo-3); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 .visioni { margin: 0; color: var(--testo-2); font-size: 14px; }
+
+.riga-visioni { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.riga-visioni .cambia { flex: none; padding: 4px 0; }
+
+/* ------------------------------------------------------------- giudizio */
+
+.stelle-voto { display: flex; gap: 2px; margin: -6px 0 0 -6px; }
+.stella {
+  width: 50px;
+  height: 50px;
+  border: 0;
+  background: none;
+  color: var(--bordo);
+  font-size: 38px;
+  line-height: 1;
+  transition: transform .1s, color .1s;
+}
+.stella.piena { color: var(--accento); }
+.stella:active { transform: scale(.88); }
+.frase-voto { margin: 0 0 18px; font-size: 17px; font-weight: 700; }
+.frase-voto.vuota { color: var(--testo-3); font-size: 15px; font-weight: 500; }
+.giudizio .etichetta { margin-top: 4px; }
+
+.pillole { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.pillola {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--bordo);
+  border-radius: 999px;
+  background: var(--superficie-2);
+  color: var(--testo-2);
+  font-size: 15px;
+  font-weight: 600;
+}
+.pillola.attiva { border-color: var(--accento); background: var(--accento); color: var(--accento-testo); }
+.pillola:active { transform: scale(.96); }
+.pillola .quanti { color: var(--testo-3); font-size: 12px; }
+
+textarea.campo.commento { height: auto; min-height: 92px; padding: 12px 14px; line-height: 1.45; resize: vertical; }
+
+.foglio h2 { margin-bottom: 4px; font-size: 20px; }
+.foglio h2 + .nota { margin: 0 0 16px; }
+.foglio .giudizio { margin-bottom: 16px; }
+.foglio .etichetta { margin-top: 18px; }
+.foglio .pulsante.largo { margin-top: 14px; }
+.foglio .azioni.due { margin-top: 14px; }
+
+/* ------------------------------------------------------------- correzioni */
+
+.elenco-date { display: grid; gap: 10px; margin-bottom: 4px; }
+.riga-data { display: flex; gap: 10px; align-items: center; }
+.riga-data .campo { flex: 1; min-width: 0; }
+
+.elenco-piattaforme { display: grid; gap: 4px; margin-bottom: 8px; }
+.elenco-piattaforme + .etichetta, .foglio-piattaforme .campo + .nota { margin-top: 12px; }
+.foglio-piattaforme .campo { margin-bottom: 8px; }
+.riga-piattaforma { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+.riga-piattaforma.spenta .logo, .riga-piattaforma.spenta .riga-piattaforma-nome > span { opacity: .45; }
+.riga-piattaforma-nome { display: flex; flex: 1; min-width: 0; flex-direction: column; font-size: 15px; font-weight: 600; }
+.riga-piattaforma-nome small { color: var(--testo-3); font-size: 12px; font-weight: 500; }
+.pulsante.piccolo { min-height: 36px; padding: 0 12px; font-size: 14px; }
+.pulsante.secondario.pericolo { color: var(--pericolo); }
+.correggi { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; }
+.correggi .icona { width: 16px; height: 16px; }
+
+.riga-aggiungi { display: flex; gap: 10px; }
+.scheda-info .riga-aggiungi .campo { flex: 1; min-width: 0; margin: 0; }
 
 .sezione { margin-top: 28px; }
 .sezione h2 { margin-bottom: 12px; font-size: 18px; font-weight: 700; }

@@ -236,11 +236,98 @@ export function segnaVisto(id, data = oggi()) {
   tocca(o);
 }
 
+// Correzione delle date di visione (formato AAAA-MM-GG, senza doppioni).
+export function impostaVisioni(id, date) {
+  const o = opera(id);
+  if (!o) return;
+  o.visioni = [...new Set(date.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)))].sort();
+  tocca(o);
+}
+
+// Accende o spegne un riconoscimento ("profondo", "ironico", ...) su un film.
+export function alternaRiconoscimento(id, idRiconoscimento) {
+  const o = opera(id);
+  if (!o) return;
+  o.riconoscimenti = o.riconoscimenti.includes(idRiconoscimento)
+    ? o.riconoscimenti.filter(r => r !== idRiconoscimento)
+    : [...o.riconoscimenti, idRiconoscimento];
+  tocca(o);
+}
+
+// Correzioni manuali delle piattaforme: non vengono mai toccate dagli aggiornamenti.
+export function nascondiPiattaforma(id, idPiattaforma, nascosta) {
+  const o = opera(id);
+  if (!o) return;
+  const elenco = o.piattaforme.nascoste.filter(x => x !== idPiattaforma);
+  if (nascosta) elenco.push(idPiattaforma);
+  o.piattaforme.nascoste = elenco;
+  tocca(o);
+}
+
+export function aggiungiPiattaforma(id, piattaforma) {
+  const o = opera(id);
+  if (!o) return;
+  const { id: idP, nome, logo = null } = piattaforma;
+  o.piattaforme.aggiunte = [...o.piattaforme.aggiunte.filter(x => x.id !== idP), { id: idP, nome, logo }];
+  o.piattaforme.nascoste = o.piattaforme.nascoste.filter(x => x !== idP);
+  tocca(o);
+}
+
+export function togliPiattaformaAggiunta(id, idPiattaforma) {
+  const o = opera(id);
+  if (!o) return;
+  o.piattaforme.aggiunte = o.piattaforme.aggiunte.filter(x => x.id !== idPiattaforma);
+  tocca(o);
+}
+
 export function rimuovi(id) {
   if (!archivio.opere[id]) return;
   delete archivio.opere[id];
   archivio.eliminati[id] = adesso();
   notifica(id);
+}
+
+// ---------------------------------------------------------------- impostazioni personali
+
+function toccaImpostazioni() {
+  archivio.impostazioni.modificateIl = adesso();
+  notifica(null);
+}
+
+// Restituisce un messaggio d'errore, oppure null se è andato tutto bene.
+export function aggiungiRiconoscimento(nome) {
+  const pulito = (nome || '').trim();
+  if (!pulito) return 'Scrivi un nome.';
+  const id = slug(pulito) || `r-${Date.now()}`;
+  const elenco = archivio.impostazioni.riconoscimenti;
+  if (elenco.some(r => r.id === id || r.nome.toLowerCase() === pulito.toLowerCase())) return 'Esiste già.';
+  archivio.impostazioni.riconoscimenti = [...elenco, { id, nome: pulito }];
+  toccaImpostazioni();
+  return null;
+}
+
+// Rinominare cambia solo il nome: i film collegati restano collegati.
+export function rinominaRiconoscimento(id, nome) {
+  const pulito = (nome || '').trim();
+  if (!pulito) return 'Scrivi un nome.';
+  const elenco = archivio.impostazioni.riconoscimenti;
+  if (elenco.some(r => r.id !== id && r.nome.toLowerCase() === pulito.toLowerCase())) return 'Esiste già.';
+  archivio.impostazioni.riconoscimenti = elenco.map(r => (r.id === id ? { ...r, nome: pulito } : r));
+  toccaImpostazioni();
+  return null;
+}
+
+export const filmConRiconoscimento = id => opere().filter(o => o.riconoscimenti.includes(id));
+
+// Elimina il riconoscimento dall'elenco e da tutti i film che lo avevano.
+export function eliminaRiconoscimento(id) {
+  const ora = adesso();
+  for (const o of filmConRiconoscimento(id)) {
+    o.riconoscimenti = o.riconoscimenti.filter(r => r !== id);
+    o.modificatoIl = ora;
+  }
+  archivio.impostazioni.riconoscimenti = archivio.impostazioni.riconoscimenti.filter(r => r.id !== id);
+  toccaImpostazioni();
 }
 
 // ---------------------------------------------------------------- aggiornamenti automatici
