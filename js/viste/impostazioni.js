@@ -43,7 +43,7 @@ function voce({ simbolo, colore, titolo, valore = null, href = null, onclick = n
 const valore = testo => h('span', { class: 'voce-valore' }, testo);
 
 const gruppo = (titolo, ...voci) =>
-  h('div', { class: 'gruppo' }, h('h2', { class: 'etichetta' }, titolo), h('div', { class: 'gruppo-voci' }, ...voci));
+  h('div', { class: 'gruppo-menu' }, h('h2', { class: 'etichetta' }, titolo), h('div', { class: 'gruppo-voci' }, ...voci));
 
 // Lo stato del salvataggio in due parole, per la riga del menu.
 function statoBreve(st) {

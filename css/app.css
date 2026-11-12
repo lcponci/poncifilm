@@ -708,8 +708,8 @@ textarea.campo.commento { height: auto; min-height: 92px; padding: 12px 14px; li
 
 /* ------------------------------------------------------------- impostazioni (menu) */
 
-.gruppo { margin: 18px 0 0; }
-.gruppo > .etichetta { margin: 0 0 8px 4px; }
+.gruppo-menu { margin: 18px 0 0; }
+.gruppo-menu > .etichetta { margin: 0 0 8px 4px; }
 .gruppo-voci { overflow: hidden; border-radius: 14px; background: var(--superficie); }
 .voce {
   display: flex;
