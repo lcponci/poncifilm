@@ -197,7 +197,12 @@ async function cerca(testo, signal, anno = null) {
   const dati = await chiama('/search/movie', {
     query: testo, language: 'it-IT', include_adult: 'false', primary_release_year: anno,
   }, { signal });
-  return (dati.results || []).map(r => ({
+  return (dati.results || []).map(risultatoFilm);
+}
+
+// Un film come arriva da TMDb (ricerca o filmografia) → nel formato di PonciFilm.
+function risultatoFilm(r) {
+  return {
     tmdbId: r.id,
     titolo: r.title || r.original_title || 'Senza titolo',
     titoloOriginale: r.original_title || null,
@@ -207,7 +212,7 @@ async function cerca(testo, signal, anno = null) {
     sfondo: r.backdrop_path || null,
     trama: (r.overview || '').trim() || null,
     voti: r.vote_count || 0,
-  }));
+  };
 }
 
 // Tutto quello che serve per la scheda del film, con una sola richiesta.
@@ -308,4 +313,108 @@ function piattaformeItalia(dati) {
     noleggio: converti(it?.rent),
     acquisto: converti(it?.buy),
   };
+}
+
+// ---------------------------------------------------------------- persone
+//
+// Registi, attori e compositori: chi sono e in quali film hanno lavorato.
+
+const REPARTI = {
+  Directing: 'Regia', Acting: 'Recitazione', Sound: 'Musica', Writing: 'Sceneggiatura',
+  Production: 'Produzione', Camera: 'Fotografia', Editing: 'Montaggio', Art: 'Scenografia',
+  'Costume & Make-Up': 'Costumi e trucco', 'Visual Effects': 'Effetti visivi', Lighting: 'Luci', Crew: 'Troupe',
+};
+export const nomeReparto = reparto => REPARTI[reparto] || reparto || null;
+
+const LAVORI_MUSICA = new Set(['Original Music Composer', 'Music', 'Composer', 'Musical Score']);
+// Comparse "nel ruolo di sé stesso" e immagini di repertorio: non sono interpretazioni.
+const NON_UN_RUOLO = /\b(self|himself|herself|themselves)\b|archive footage|sé stess|se stess|repertorio/i;
+
+// Persone trovate per nome (per la ricerca in "Aggiungi"). Tengo solo quelle il cui
+// nome somiglia davvero a quanto scritto e che hanno fatto film conosciuti, così
+// scrivendo un titolo non spuntano omonimi sconosciuti.
+const SOGLIA_FAMA = 300; // voti su TMDb del suo film più conosciuto
+
+export async function cercaPersone(testo, signal) {
+  const scritto = compatto(testo);
+  if (scritto.length < 4) return [];
+  const dati = await chiama('/search/person', { query: testo, language: 'it-IT', include_adult: 'false' }, { signal });
+  return (dati.results || [])
+    .filter(p => somiglianzaTitolo(scritto, p.name) >= SOGLIA_BUONA)
+    .filter(p => Math.max(0, ...(p.known_for || []).map(f => f.vote_count || 0)) >= SOGLIA_FAMA)
+    .slice(0, 3)
+    .map(p => ({ id: p.id, nome: p.name, foto: p.profile_path || null, reparto: p.known_for_department || null }));
+}
+
+// La scheda completa di una persona, con una sola richiesta. Resta in memoria
+// finché l'app è aperta: tornando indietro si riapre all'istante.
+const personeScaricate = new Map();
+const personeInArrivo = new Map();
+
+export const personaGiaScaricata = id => personeScaricate.get(Number(id)) ?? null;
+
+export function dettagliPersona(id) {
+  const numero = Number(id);
+  if (!personeInArrivo.has(numero)) {
+    const richiesta = scaricaPersona(numero)
+      .then(p => { personeScaricate.set(numero, p); return p; })
+      .catch(errore => { personeInArrivo.delete(numero); throw errore; });
+    personeInArrivo.set(numero, richiesta);
+  }
+  return personeInArrivo.get(numero);
+}
+
+async function scaricaPersona(id) {
+  let d;
+  try {
+    d = await chiama(`/person/${id}`, { language: 'it-IT', append_to_response: 'movie_credits,translations' });
+  } catch (errore) {
+    if (errore.tipo === 'assente') throw new ErroreTmdb('assente', 'Questa persona non si trova su TMDb.');
+    throw errore;
+  }
+
+  // Biografia: in italiano; se manca, quella inglese (segnalata con "EN").
+  const traduzioni = d.translations?.translations || [];
+  const bio = lingua => (traduzioni.find(t => t.iso_639_1 === lingua)?.data?.biography || '').trim();
+  let biografia = bio('it');
+  let biografiaLingua = biografia ? 'it' : null;
+  if (!biografia && bio('en')) { biografia = bio('en'); biografiaLingua = 'en'; }
+  if (!biografia && (d.biography || '').trim()) { biografia = d.biography.trim(); biografiaLingua = null; }
+
+  const crediti = d.movie_credits || {};
+  const troupe = crediti.crew || [];
+  return {
+    id: d.id,
+    nome: d.name,
+    foto: d.profile_path || null,
+    reparto: d.known_for_department || null,
+    nascita: d.birthday || null,
+    morte: d.deathday || null,
+    luogoNascita: d.place_of_birth || null,
+    biografia: biografia || null,
+    biografiaLingua,
+    filmografia: {
+      regia: raccogliFilm(troupe.filter(c => c.job === 'Director'), () => null),
+      cast: raccogliFilm((crediti.cast || []).filter(c => !NON_UN_RUOLO.test(c.character || '')),
+        c => (c.character || '').trim() || null),
+      musica: raccogliFilm(troupe.filter(c => LAVORI_MUSICA.has(c.job)), () => null),
+    },
+  };
+}
+
+// Un film per riga (anche se la persona vi ha avuto più ruoli), senza gli
+// annunci vuoti (niente data, niente locandina, nessun voto).
+function raccogliFilm(elenco, ruoloDi) {
+  const perFilm = new Map();
+  for (const c of elenco) {
+    if (!c.release_date && !c.poster_path && !c.vote_count) continue;
+    const ruolo = ruoloDi(c);
+    const gia = perFilm.get(c.id);
+    if (gia) {
+      if (ruolo && !(gia.ruolo || '').includes(ruolo)) gia.ruolo = [gia.ruolo, ruolo].filter(Boolean).join(' / ');
+      continue;
+    }
+    perFilm.set(c.id, { ...risultatoFilm(c), ruolo });
+  }
+  return [...perFilm.values()];
 }

@@ -739,3 +739,92 @@ textarea.campo.commento { height: auto; min-height: 92px; padding: 12px 14px; li
 .scelta-copia { width: 100%; margin-top: 10px; padding: 14px 16px; justify-content: flex-start; text-align: left; }
 .scelta-copia strong { display: block; font-size: 16px; }
 .scelta-copia .nota { display: block; margin-top: 2px; font-weight: 400; }
+
+/* ------------------------------------------------------------- persone */
+
+/* Nomi toccabili nella scheda del film. */
+.link-persona { color: var(--testo); text-decoration: underline; text-decoration-color: var(--testo-3); text-underline-offset: 2px; }
+a.persona:active .foto { transform: scale(.95); }
+
+/* Persone trovate cercando in "Aggiungi". */
+.persone-trovate { margin: 6px 0 14px; }
+.persone-trovate + .etichetta { margin: 0; }
+.riga-persona {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--bordo);
+}
+.riga-persona .foto { width: 48px; height: 48px; margin: 0; font-size: 14px; }
+.riga-persona .riga-testo { display: flex; flex: 1; flex-direction: column; }
+.riga-persona > .icona.freccia { color: var(--testo-3); }
+
+/* Scheda della persona. */
+.persona-testa { display: flex; align-items: flex-start; gap: 16px; margin-top: 8px; }
+.persona-foto {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 112px;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--superficie-2);
+  color: var(--testo-2);
+  font-size: 28px;
+  font-weight: 700;
+}
+.persona-foto img { width: 100%; height: 100%; object-fit: cover; }
+.persona-dati { min-width: 0; }
+.persona-mestiere { margin: 2px 0 10px; color: var(--accento); font-size: 14px; font-weight: 700; }
+.dettagli.piccoli { gap: 4px 10px; font-size: 14px; }
+.persona-tuoi { margin: 12px 0 0; color: var(--testo-2); font-size: 14px; }
+.persona-tuoi strong { color: var(--testo); }
+.biografia { margin: 0; color: #d9dbe0; line-height: 1.5; white-space: pre-line; }
+.biografia.chiusa { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.biografia + .cambia { padding: 8px 0 0; }
+
+.pillole.categorie { margin-bottom: 12px; }
+.pillola.attiva .quanti { color: var(--accento-testo); opacity: .7; }
+.filtri-filmografia { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+.filtri-filmografia .pillola { min-height: 34px; padding: 0 14px; font-size: 14px; }
+.segmenti { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--superficie); }
+.segmenti button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--testo-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+.segmenti button.attivo { background: var(--superficie-2); color: var(--testo); }
+
+/* Locandine della filmografia: i film già tuoi hanno un bollino con lo stato. */
+button.card { width: 100%; padding: 0; border: 0; background: none; text-align: left; }
+.badge-stato {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accento);
+  color: var(--accento-testo);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, .35);
+}
+.badge-stato .icona { width: 14px; height: 14px; stroke-width: 2.6; }
+.card.nel-archivio .card-locandina { box-shadow: 0 0 0 2px var(--accento); }
+.card-ruolo {
+  margin-top: 1px;
+  color: var(--testo-3);
+  font-size: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

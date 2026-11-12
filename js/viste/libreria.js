@@ -34,8 +34,11 @@ const perTitolo = (a, b) => a.info.titolo.localeCompare(b.info.titolo, 'it');
 const perVisione = (a, b) =>
   (archivio.ultimaVisione(b) || '').localeCompare(archivio.ultimaVisione(a) || '') || perAggiunta(a, b);
 
+// Cerca nel titolo (italiano e originale) e nei nomi di regista, compositore e attori.
 function corrisponde(o, testo) {
-  return normalizza(o.info.titolo).includes(testo) || normalizza(o.info.titoloOriginale).includes(testo);
+  const i = o.info;
+  const persone = [...(i.regia || []), ...(i.musica || []), ...(i.cast || [])].map(p => p.nome);
+  return [i.titolo, i.titoloOriginale, ...persone].some(t => normalizza(t).includes(testo));
 }
 
 export function vistaElenco(pagina) {
@@ -43,7 +46,7 @@ export function vistaElenco(pagina) {
   ricerche[pagina] ??= '';
 
   const campo = h('input', {
-    type: 'search', class: 'campo', placeholder: 'Cerca nel tuo archivio', value: ricerche[pagina],
+    type: 'search', class: 'campo', placeholder: 'Cerca titolo, regista, attore', value: ricerche[pagina],
     autocomplete: 'off', enterkeyhint: 'search', 'aria-label': 'Cerca nel tuo archivio',
     oninput: e => { ricerche[pagina] = e.target.value; disegna(); },
     onkeydown: e => { if (e.key === 'Enter') e.target.blur(); },
@@ -92,7 +95,7 @@ export function vistaElenco(pagina) {
       contenuto.replaceChildren(
         trovate.length
           ? griglia(trovate, { mostraStato: true })
-          : vuoto(h('p', null, 'Nessun film con questo titolo nel tuo archivio.')),
+          : vuoto(h('p', null, 'Nessun film trovato nel tuo archivio.')),
         h('div', { class: 'centrato' }, h('a', {
           class: 'pulsante secondario', href: '#/aggiungi',
           onclick: () => preimpostaRicerca(ricerche[pagina].trim()),

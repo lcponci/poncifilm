@@ -10,6 +10,17 @@ export function locandina(percorso, misura = 'w342', titolo = '') {
     : h('div', { class: 'segnaposto' }, titolo);
 }
 
+// Foto tonda di una persona; se manca, le iniziali del nome.
+export function fotoPersona(p, misura = 'w185') {
+  return h('div', { class: 'foto' }, p.foto
+    ? h('img', { src: immagine(p.foto, misura), alt: '', loading: 'lazy', decoding: 'async' })
+    : h('span', null, iniziali(p.nome)));
+}
+
+export function iniziali(nome) {
+  return (nome || '?').split(/\s+/).slice(0, 2).map(parola => parola[0]).join('').toUpperCase();
+}
+
 export function nomeStato(id) {
   return archivio.impostazioni().stati.find(s => s.id === id)?.nome ?? id;
 }

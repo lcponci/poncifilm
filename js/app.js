@@ -9,6 +9,7 @@ import { vistaElenco } from './viste/libreria.js';
 import { vistaAggiungi } from './viste/aggiungi.js';
 import { vistaFilm } from './viste/film.js';
 import { vistaImpostazioni } from './viste/impostazioni.js';
+import { vistaPersona } from './viste/persona.js';
 
 const contenitore = document.getElementById('vista');
 
@@ -28,6 +29,7 @@ const ROTTE = [
   [/^#\/abbandonati$/, () => vistaElenco('abbandonati'), null],
   [/^#\/aggiungi$/, () => vistaAggiungi(), 'aggiungi'],
   [/^#\/film\/([\w-]+)$/, m => vistaFilm(m[1]), voceDelFilm],
+  [/^#\/persona\/(\d+)$/, m => vistaPersona(m[1]), null],
   [/^#\/impostazioni$/, () => vistaImpostazioni(), null],
   [/^#\/impostazioni\/(salvataggio|riconoscimenti|tmdb)$/, m => vistaImpostazioni(m[1]), null],
 ];

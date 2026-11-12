@@ -2,7 +2,7 @@
 
 import { h, icona, avviso, apriFoglio, formattaData, formattaDurata, nomePaese, normalizza, stelle } from '../ui.js';
 import {
-  locandina, logoPiattaforma, descrizioneStato, segnoStato, apriSceltaStato, apriGiudizio,
+  locandina, logoPiattaforma, descrizioneStato, segnoStato, apriSceltaStato, apriGiudizio, fotoPersona,
 } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { immagine, haChiave, elencoPiattaforme } from '../tmdb.js';
@@ -69,7 +69,10 @@ function contenuto(o) {
         h('h1', null, i.titolo),
         i.titoloOriginale && i.titoloOriginale !== i.titolo && h('p', { class: 'titolo-originale' }, i.titoloOriginale),
         meta && h('p', { class: 'meta' }, meta),
-        regia.length > 0 && h('p', { class: 'meta' }, 'Regia di ', regia.map(p => p.nome).join(', ')),
+        regia.length > 0 && h('p', { class: 'meta' }, 'Regia di ', regia.map((p, n) => [
+          n > 0 && ', ',
+          p.id ? h('a', { class: 'link-persona', href: `#/persona/${p.id}` }, p.nome) : p.nome,
+        ])),
         o.voto ? stelle(o.voto) : null)),
     !o.infoCompleta && h('p', { class: 'nota' }, haChiave()
       ? 'Sto recuperando le informazioni da TMDb…'
@@ -195,18 +198,13 @@ function sezionePiattaforme(o) {
   );
 }
 
+// Foto e nomi in fila; un tocco apre la scheda della persona.
 function elencoPersone(persone) {
   return h('div', { class: 'persone' }, persone.map(p =>
-    h('div', { class: 'persona' },
-      h('div', { class: 'foto' }, p.foto
-        ? h('img', { src: immagine(p.foto, 'w185'), alt: '', loading: 'lazy', decoding: 'async' })
-        : h('span', null, iniziali(p.nome))),
+    h(p.id ? 'a' : 'div', { class: 'persona', href: p.id ? `#/persona/${p.id}` : null },
+      fotoPersona(p),
       h('div', { class: 'persona-nome' }, p.nome),
       p.ruolo && h('div', { class: 'persona-ruolo' }, p.ruolo))));
-}
-
-function iniziali(nome) {
-  return (nome || '?').split(/\s+/).slice(0, 2).map(parola => parola[0]).join('').toUpperCase();
 }
 
 function sezioneDettagli(i) {

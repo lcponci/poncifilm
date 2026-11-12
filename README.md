@@ -17,6 +17,7 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - Esportazione: copia completa (JSON) e tabella per Excel (CSV con punto e virgola e accenti corretti).
 - Archiviazione: repository GitHub privato al posto di OneDrive (OneDrive obbligherebbe a riaccedere ogni 24 ore e richiede una registrazione Microsoft incerta). Possibile in futuro un pulsante per salvare una copia anche su OneDrive.
 - Navigazione: due pagine, **Da vedere** (comprende i film da rivedere, segnati con ↻) e **Visti**. Gli **abbandonati** si raggiungono solo da Impostazioni (o cercandoli per titolo).
+- Impostazioni: un menu come quello dell'iPhone (Riconoscimenti, Film abbandonati, Salvataggio online, Scarica una copia, Chiave TMDb), ognuno con il suo stato a destra e una pagina dedicata.
 - Aggiunta: la priorità si sceglie subito, con un tocco, nel pannello del film. Anche i film da rivedere hanno una priorità.
 - Scheda film: lo stato è un unico riquadro; toccandolo si apre un pannello con i tre stati (Da vedere, Da rivedere, Visto) e, solo per i primi due, la riga delle priorità. Tornando da vedere/da rivedere si riparte da «Prima o poi». «Abbandonato» è un link discreto in fondo. Tutti i pannelli si chiudono anche trascinandoli in basso. Ordine: trama, cast, regia e musica, dove vederlo, dettagli.
 - Ricerca: ogni risultato mostra anno, regista (chiesto a TMDb subito dopo, per i primi 12) e titolo originale. «titolo anno» (es. «dune 1984») cerca la versione di quell'anno. I risultati sono ordinati per somiglianza al testo scritto (ignorando spazi, accenti e maiuscole) e notorietà; se nulla somiglia, l'app riprova da sola con varianti (spazi mancanti come «laland», ultima parola accorciata per gli errori di battitura).
@@ -25,6 +26,8 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - Riconoscimenti: menu a tendina a scelta multipla (si vedono solo quelli scelti). Si gestiscono in Impostazioni: rinominare mantiene i collegamenti ai film; eliminare li toglie anche dai film.
 - Stato «Da vedere»; priorità: **Day one / Il prima possibile / Prima o poi**.
 - Colonna sonora: solo il compositore.
+- Persone: toccando regista, attori o compositore nella scheda del film si apre la loro scheda (foto, mestiere, nascita, biografia italiana o «EN») con la filmografia a locandine divisa in Regia / Cast / Musica, ordinabile per notorietà o per anno, con il filtro «Solo i tuoi». I film già nell'archivio hanno un bollino con lo stato; gli altri si aggiungono con un tocco. Esclusi i ruoli «sé stesso» e le immagini di repertorio. Le schede non vengono salvate nell'archivio: si scaricano da TMDb quando servono (e restano in memoria finché l'app è aperta).
+- Ricerca per autore: in «Aggiungi» si può scrivere anche il nome di un regista o di un attore; le persone compaiono in cima (solo se il nome somiglia davvero e hanno fatto film conosciuti). Nella libreria la ricerca guarda anche regista, compositore e attori.
 - Piattaforme: aggiornate quando si apre la scheda del film (al massimo una volta l'ora), con correzioni manuali che non vengono sovrascritte.
 - Trama: italiana; se manca, quella inglese segnata «EN»; altrimenti vuota (mai dati inventati).
 
@@ -34,7 +37,7 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - [x] **1 – Primo assaggio**: app installabile, ricerca TMDb, aggiunta a Da vedere/Visti, libreria a locandine, scheda film di base, funzionamento offline.
 - [x] **2 – Gestione**: voto con frase, riconoscimenti, commento, correzione date, piattaforme manuali, gestione riconoscimenti.
 - [x] **3 – Solidità**: sincronizzazione con il repository privato, esportazione CSV.
-- [ ] **4 – Persone**: schede di attori, registi e compositori.
+- [x] **4 – Persone**: schede di attori, registi e compositori; ricerca per autore.
 - [ ] **5 – Import da Notion** (CSV).
 - [ ] Dopo: la Mensola, filtri e statistiche, serie TV, cortometraggi.
 
@@ -61,5 +64,5 @@ poi aprire <http://localhost:8000> nel browser. Sul computer locale la copia off
 | `js/tmdb.js`, `js/servizi.js` | Collegamento a TMDb e aggiornamenti automatici |
 | `js/sincronizzazione.js` | Salvataggio online nel repository GitHub privato |
 | `js/esporta.js` | Copie scaricabili (JSON e CSV) |
-| `js/viste/` | Le schermate: libreria, aggiungi, film, impostazioni |
+| `js/viste/` | Le schermate: libreria, aggiungi, film, persona, impostazioni |
 | `strumenti/` | Generatore delle icone e controlli |

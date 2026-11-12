@@ -1,17 +1,20 @@
 // Aggiungere un film: cerco il titolo, riconosco la locandina, tocco e scelgo.
+// Si può scrivere anche il nome di un regista o di un attore: le persone trovate
+// compaiono in cima e portano alla loro filmografia.
 
 import { h, icona, avviso, apriFoglio } from '../ui.js';
-import { locandina, nomeStato, descrizioneStato, datiPriorita, pulsantiPriorita, apriGiudizio } from '../componenti.js';
+import { locandina, nomeStato, descrizioneStato, datiPriorita, pulsantiPriorita, apriGiudizio, fotoPersona } from '../componenti.js';
 import * as archivio from '../archivio.js';
-import { cercaFilm, haChiave, registiDi } from '../tmdb.js';
+import { cercaFilm, cercaPersone, haChiave, registiDi, nomeReparto } from '../tmdb.js';
 import { completaFilm } from '../servizi.js';
 
 // La ricerca resta lì quando torni indietro da una scheda.
-const memoria = { testo: '', risultati: null, errore: null };
+const memoria = { testo: '', risultati: null, persone: [], errore: null };
 
 export function preimpostaRicerca(testo) {
   memoria.testo = testo;
   memoria.risultati = null;
+  memoria.persone = [];
   memoria.errore = null;
 }
 
@@ -20,9 +23,9 @@ export function vistaAggiungi() {
   let controllo = null;
 
   const campo = h('input', {
-    type: 'search', class: 'campo', placeholder: 'Titolo del film', value: memoria.testo,
+    type: 'search', class: 'campo', placeholder: 'Titolo, regista o attore', value: memoria.testo,
     autocomplete: 'off', autocorrect: 'off', autocapitalize: 'off', spellcheck: 'false',
-    enterkeyhint: 'search', 'aria-label': 'Titolo del film da cercare',
+    enterkeyhint: 'search', 'aria-label': 'Titolo del film, regista o attore da cercare',
     oninput: () => {
       memoria.testo = campo.value;
       clearTimeout(timer);
@@ -44,6 +47,7 @@ export function vistaAggiungi() {
     controllo?.abort();
     if (testo.length < 2) {
       memoria.risultati = null;
+      memoria.persone = [];
       memoria.errore = null;
       disegna();
       return;
@@ -51,15 +55,19 @@ export function vistaAggiungi() {
     const mio = new AbortController();
     controllo = mio;
     stato.textContent = 'Cerco…';
-    try {
-      memoria.risultati = await cercaFilm(testo, mio.signal);
+    // Film e persone insieme; se la ricerca delle persone non riesce, pazienza.
+    const [film, persone] = await Promise.allSettled([cercaFilm(testo, mio.signal), cercaPersone(testo, mio.signal)]);
+    if (mio.signal.aborted || controllo !== mio) return;
+    if (film.status === 'fulfilled') {
+      memoria.risultati = film.value;
       memoria.errore = null;
-    } catch (errore) {
-      if (errore.name === 'AbortError') return;
+    } else {
+      if (film.reason?.name === 'AbortError') return;
       memoria.risultati = null;
-      memoria.errore = errore.message;
+      memoria.errore = film.reason?.message || 'Ricerca non riuscita.';
     }
-    if (controllo === mio) disegna();
+    memoria.persone = persone.status === 'fulfilled' ? persone.value : [];
+    disegna();
   }
 
   function disegna() {
@@ -76,12 +84,17 @@ export function vistaAggiungi() {
       return;
     }
     if (!memoria.risultati) {
-      stato.textContent = 'Scrivi il titolo, anche solo una parte.';
+      stato.textContent = 'Scrivi il titolo (anche solo una parte), oppure il nome di un regista o di un attore.';
       elenco.replaceChildren();
       return;
     }
-    stato.textContent = memoria.risultati.length ? '' : 'Nessun film trovato su TMDb. Prova con il titolo originale.';
-    elenco.replaceChildren(...memoria.risultati.map((r, i) => rigaRisultato(r, i, controllo?.signal)));
+    const persone = memoria.persone || [];
+    stato.textContent = memoria.risultati.length || persone.length ? '' : 'Nessun film trovato su TMDb. Prova con il titolo originale.';
+    elenco.replaceChildren(...[
+      persone.length > 0 && personeTrovate(persone),
+      persone.length > 0 && memoria.risultati.length > 0 && h('div', { class: 'etichetta' }, 'Film'),
+      ...memoria.risultati.map((r, i) => rigaRisultato(r, i, controllo?.signal)),
+    ].filter(Boolean));
   }
 
   disegna();
@@ -95,6 +108,18 @@ export function vistaAggiungi() {
     // Chiamata subito dopo il tocco su "Aggiungi": così sull'iPhone si apre la tastiera.
     mettiAFuoco() { if (!memoria.risultati) campo.focus(); },
   };
+}
+
+// Registi e attori trovati: un tocco apre la loro filmografia.
+function personeTrovate(persone) {
+  return h('div', { class: 'persone-trovate' },
+    h('div', { class: 'etichetta' }, 'Persone'),
+    persone.map(p => h('a', { class: 'riga-persona', href: `#/persona/${p.id}` },
+      fotoPersona(p, 'w185'),
+      h('span', { class: 'riga-testo' },
+        h('span', { class: 'riga-titolo' }, p.nome),
+        h('span', { class: 'riga-sotto' }, [nomeReparto(p.reparto), 'vedi i film'].filter(Boolean).join(' · '))),
+      icona('indietro', 'icona freccia'))));
 }
 
 // "1963 · Alfred Hitchcock · The Birds"
@@ -123,8 +148,15 @@ function rigaRisultato(r, posizione, signal) {
   );
 }
 
-function apriAnteprima(r) {
+// Pannello per aggiungere un film trovato su TMDb (dalla ricerca o dalla scheda di una persona).
+export function apriAnteprima(r) {
   const presente = archivio.opera(archivio.idFilm(r.tmdbId));
+  const sotto = h('p', { class: 'nota' }, sottotitolo(r));
+  if (!r.registi) {
+    registiDi(r.tmdbId)
+      .then(registi => { r.registi = registi; sotto.textContent = sottotitolo(r); })
+      .catch(() => { /* senza regista va bene lo stesso */ });
+  }
 
   // Un tocco solo: "Da vedere" con la priorità scelta, oppure "Visto".
   function aggiungi(stato, priorita = null) {
@@ -156,7 +188,7 @@ function apriAnteprima(r) {
       h('div', { class: 'anteprima-locandina' }, locandina(r.locandina, 'w342', r.titolo)),
       h('div', null,
         h('h2', null, r.titolo),
-        h('p', { class: 'nota' }, sottotitolo(r)),
+        sotto,
         r.trama && h('p', { class: 'trama-breve' }, r.trama))),
     azioni,
   ));
