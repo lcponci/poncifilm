@@ -36,6 +36,11 @@ const ICONE = {
   nuvola: '<path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.1 4.7 4.7 0 0 0 7 18.5z"/>',
   scarica: '<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/>',
   chiave: '<circle cx="8" cy="15" r="4"/><path d="M11 12l8.5-8.5M16.5 6.5l2.5 2.5M14 9l2 2"/>',
+  casa: '<path d="M4 10.5L12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/>',
+  cerca: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  avanti: '<path d="M9 6l6 6-6 6"/>',
+  mensola: '<path d="M3 20.5h18"/><rect x="4.5" y="7" width="4" height="13.5" rx=".8"/><rect x="10" y="4.5" width="4" height="16" rx=".8"/><path d="M15.6 8.4l3.6-1 3 12.4-3.6 1z"/>',
+  foto: '<rect x="3.5" y="5.5" width="17" height="14" rx="2"/><circle cx="9" cy="10.5" r="1.8"/><path d="M20.5 16l-5-5-9 8.5"/>',
 };
 
 export function icona(nome, classe = 'icona') {
@@ -53,12 +58,16 @@ export function icona(nome, classe = 'icona') {
 }
 
 // Messaggio breve in basso ("Aggiunto alla Watchlist").
+// azione: un collegamento ({ testo, href }) oppure un comando ({ testo, fai }), es. "Annulla".
 let timerAvviso = null;
 export function avviso(testo, { azione } = {}) {
   const box = document.getElementById('avvisi');
   const nascondi = () => box.classList.remove('visibile');
   box.replaceChildren(h('span', null, testo));
-  if (azione) box.append(h('a', { href: azione.href, onclick: nascondi }, azione.testo));
+  if (azione?.href) box.append(h('a', { href: azione.href, onclick: nascondi }, azione.testo));
+  else if (azione?.fai) {
+    box.append(h('button', { type: 'button', onclick: () => { nascondi(); azione.fai(); } }, azione.testo));
+  }
   box.classList.add('visibile');
   clearTimeout(timerAvviso);
   timerAvviso = setTimeout(nascondi, azione ? 4500 : 2500);

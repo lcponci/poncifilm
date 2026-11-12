@@ -10,6 +10,7 @@ import { vistaAggiungi } from './viste/aggiungi.js';
 import { vistaFilm } from './viste/film.js';
 import { vistaImpostazioni } from './viste/impostazioni.js';
 import { vistaPersona } from './viste/persona.js';
+import { vistaFilmManuale } from './viste/manuale.js';
 
 const contenitore = document.getElementById('vista');
 
@@ -17,17 +18,19 @@ const contenitore = document.getElementById('vista');
 function voceDelFilm(m) {
   const stato = opera(m[1])?.stato;
   if (stato === 'visto') return 'visti';
-  if (stato === 'da-vedere' || stato === 'da-rivedere') return 'da-vedere';
+  if (stato === 'da-vedere' || stato === 'da-rivedere') return 'home';
   return null;
 }
 
 // Indirizzo (dopo il #) → schermata da mostrare e voce della barra in basso da evidenziare.
 const ROTTE = [
-  [/^#?\/?$/, () => vistaElenco('da-vedere'), 'da-vedere'],
-  [/^#\/da-vedere$/, () => vistaElenco('da-vedere'), 'da-vedere'],
+  [/^#?\/?$/, () => vistaElenco('da-vedere'), 'home'],
+  [/^#\/da-vedere$/, () => vistaElenco('da-vedere'), 'home'],
   [/^#\/visti$/, () => vistaElenco('visti'), 'visti'],
   [/^#\/abbandonati$/, () => vistaElenco('abbandonati'), null],
   [/^#\/aggiungi$/, () => vistaAggiungi(), 'aggiungi'],
+  [/^#\/nuovo$/, () => vistaFilmManuale(), 'aggiungi'],
+  [/^#\/film\/([\w-]+)\/modifica$/, m => vistaFilmManuale(m[1]), null],
   [/^#\/film\/([\w-]+)$/, m => vistaFilm(m[1]), voceDelFilm],
   [/^#\/persona\/(\d+)$/, m => vistaPersona(m[1]), null],
   [/^#\/impostazioni$/, () => vistaImpostazioni(), null],

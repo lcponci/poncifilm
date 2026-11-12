@@ -18,6 +18,14 @@ export function preimpostaRicerca(testo) {
   memoria.errore = null;
 }
 
+// L'ultimo testo cercato: diventa il titolo proposto per un film inserito a mano.
+export const ultimaRicerca = () => memoria.testo.trim();
+
+// Per i film che TMDb non conosce (o quando TMDb non risponde).
+const linkManuale = () => h('div', { class: 'link-manuale' },
+  h('span', { class: 'nota' }, 'Non lo trovi?'),
+  h('a', { class: 'pulsante secondario', href: '#/nuovo' }, icona('matita'), 'Inseriscilo a mano'));
+
 export function vistaAggiungi() {
   let timer = null;
   let controllo = null;
@@ -74,13 +82,13 @@ export function vistaAggiungi() {
     stato.className = 'nota';
     if (!haChiave()) {
       stato.replaceChildren('Per cercare serve la chiave TMDb. ', h('a', { href: '#/impostazioni/tmdb' }, 'Inseriscila qui'));
-      elenco.replaceChildren();
+      elenco.replaceChildren(linkManuale());
       return;
     }
     if (memoria.errore) {
       stato.className = 'nota errore';
       stato.textContent = memoria.errore;
-      elenco.replaceChildren();
+      elenco.replaceChildren(linkManuale());
       return;
     }
     if (!memoria.risultati) {
@@ -94,6 +102,7 @@ export function vistaAggiungi() {
       persone.length > 0 && personeTrovate(persone),
       persone.length > 0 && memoria.risultati.length > 0 && h('div', { class: 'etichetta' }, 'Film'),
       ...memoria.risultati.map((r, i) => rigaRisultato(r, i, controllo?.signal)),
+      linkManuale(),
     ].filter(Boolean));
   }
 

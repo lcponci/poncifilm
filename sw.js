@@ -3,7 +3,7 @@
 // IMPORTANTE: a ogni nuova versione cambiare VERSIONE (e js/versione.js),
 // altrimenti i dispositivi continuano a usare la copia vecchia.
 
-const VERSIONE = 'poncifilm-0.5.0';
+const VERSIONE = 'poncifilm-0.6.0';
 
 const FILE_APP = [
   './',
@@ -25,6 +25,8 @@ const FILE_APP = [
   'js/viste/film.js',
   'js/viste/impostazioni.js',
   'js/viste/persona.js',
+  'js/viste/mensola.js',
+  'js/viste/manuale.js',
   'icone/icona-180.png',
   'icone/icona-192.png',
   'icone/icona-512.png',

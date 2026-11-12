@@ -75,9 +75,16 @@ function paginaPrincipale() {
     h('p', { class: 'nota' }, 'Per cercare i film e scaricarne le informazioni serve una chiave TMDb. È gratuita e la inserisci una volta per dispositivo.'),
     h('a', { class: 'pulsante largo', href: '#/impostazioni/tmdb' }, 'Inserisci la chiave'));
 
+  const valoreMensola = valore('');
+  const aggiornaMensola = () => {
+    valoreMensola.textContent = `${archivio.filmSullaMensola().length} di ${archivio.limiteMensola()}`;
+  };
+  aggiornaMensola();
+
   const el = pagina('Impostazioni',
     perIniziare,
     gruppo('La tua cineteca',
+      voce({ simbolo: 'mensola', colore: '#8a5a3c', titolo: 'Mensola', valore: valoreMensola, onclick: () => apriLimiteMensola(aggiornaMensola) }),
       voce({ simbolo: 'medaglia', colore: '#d9822b', titolo: 'Riconoscimenti', valore: valore(String(riconoscimenti)), href: '#/impostazioni/riconoscimenti' }),
       voce({ simbolo: 'chiudi', colore: '#5b6069', titolo: 'Film abbandonati', valore: valore(String(abbandonati)), href: '#/abbandonati' })),
     gruppo('I tuoi dati',
@@ -93,6 +100,38 @@ function paginaPrincipale() {
         h('a', { href: 'https://www.justwatch.com', target: '_blank', rel: 'noopener' }, 'JustWatch'), '.')));
 
   return { el, smonta: stacca };
+}
+
+// Quanti film può tenere la Mensola: pochi, perché resti una selezione speciale.
+function apriLimiteMensola(dopo) {
+  const numero = h('strong', { class: 'contatore-grande' });
+  const meno = h('button', { type: 'button', class: 'pulsante-icona grande', 'aria-label': 'Un posto in meno', onclick: () => cambia(-1) }, '−');
+  const piu = h('button', { type: 'button', class: 'pulsante-icona grande', 'aria-label': 'Un posto in più', onclick: () => cambia(1) }, '+');
+  const nota = h('p', { class: 'nota centrata' });
+
+  function disegna() {
+    const limite = archivio.limiteMensola();
+    const sopra = archivio.filmSullaMensola().length;
+    numero.textContent = String(limite);
+    meno.disabled = limite <= Math.max(1, sopra);
+    piu.disabled = limite >= 60;
+    nota.textContent = sopra >= limite
+      ? `È piena: ci sono ${sopra} film. Per scendere sotto questo numero, prima togline qualcuno.`
+      : `Ci sono ${sopra} film: restano ${limite - sopra} posti liberi.`;
+    dopo();
+  }
+
+  function cambia(passo) {
+    archivio.impostaLimiteMensola(archivio.limiteMensola() + passo);
+    disegna();
+  }
+
+  disegna();
+  apriFoglio(h('div', null,
+    h('h2', null, 'Mensola'),
+    h('p', { class: 'nota' }, 'Quanti film può tenere. Pochi, così resta una vetrina dei tuoi preferiti di sempre. Sull\'iPhone ogni ripiano ne contiene 4.'),
+    h('div', { class: 'regola-numero' }, meno, numero, piu),
+    nota));
 }
 
 function apriScaricaCopia() {

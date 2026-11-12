@@ -251,11 +251,13 @@ export function griglia(elenco, opzioni) {
 
 // Intestazione delle pagine: titolo + (a destra) impostazioni, oppure "indietro" a sinistra.
 // indietro: un indirizzo fisso ('#/impostazioni') oppure true = torna alla pagina precedente.
-export function intestazione(titolo, { indietro = null, impostazioni = false } = {}) {
+// altri: pulsanti in più da mettere a destra, prima delle impostazioni (es. la ricerca).
+export function intestazione(titolo, { indietro = null, impostazioni = false, altri = null } = {}) {
   const tornaIndietro = () => (history.length > 1 ? history.back() : location.replace('#/'));
   return h('header', { class: 'intestazione' },
     typeof indietro === 'string' && h('a', { class: 'pulsante-icona', href: indietro, 'aria-label': 'Indietro' }, icona('indietro')),
     indietro === true && h('button', { type: 'button', class: 'pulsante-icona', 'aria-label': 'Indietro', onclick: tornaIndietro }, icona('indietro')),
     h('h1', null, titolo),
+    altri,
     impostazioni && h('a', { class: 'pulsante-icona', href: '#/impostazioni', 'aria-label': 'Impostazioni' }, icona('impostazioni')));
 }

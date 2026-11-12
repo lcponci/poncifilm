@@ -30,7 +30,10 @@ export function impostaChiave(nuova) {
 }
 
 export function immagine(percorso, misura = 'w342') {
-  return percorso ? `${IMMAGINI}${misura}${percorso}` : null;
+  if (!percorso) return null;
+  // Locandina caricata a mano: è già un'immagine completa, salvata nell'archivio.
+  if (percorso.startsWith('data:')) return percorso;
+  return `${IMMAGINI}${misura}${percorso}`;
 }
 
 async function chiama(percorso, parametri = {}, { signal, chiaveDaUsare = chiave } = {}) {

@@ -1,14 +1,18 @@
-// Le pagine elenco: "Da vedere" (con i film da rivedere), "Visti" e "Abbandonati".
+// Le pagine elenco:
+// - la Home: in alto la Mensola, sotto i film da vedere (con quelli da rivedere);
+// - "Visti" e "Abbandonati".
 
-import { h, vuoto, normalizza } from '../ui.js';
+import { h, icona, vuoto, normalizza } from '../ui.js';
 import { griglia, intestazione } from '../componenti.js';
 import * as archivio from '../archivio.js';
 import { haChiave } from '../tmdb.js';
 import { preimpostaRicerca } from './aggiungi.js';
+import { sezioneMensola, colonneMensola } from './mensola.js';
 
 export const PAGINE = {
   'da-vedere': {
-    titolo: 'Da vedere',
+    titolo: 'PonciFilm',
+    home: true, // con la Mensola in cima e la ricerca dietro la lente
     stati: ['da-vedere', 'da-rivedere'],
     vuoto: 'Nessun film da vedere. Tocca + per aggiungerne uno.',
   },
@@ -50,12 +54,21 @@ export function vistaElenco(pagina) {
     autocomplete: 'off', enterkeyhint: 'search', 'aria-label': 'Cerca nel tuo archivio',
     oninput: e => { ricerche[pagina] = e.target.value; disegna(); },
     onkeydown: e => { if (e.key === 'Enter') e.target.blur(); },
+    // Nella Home la ricerca si richiude se la lasci vuota.
+    onblur: () => { if (conf.home && !ricerche[pagina].trim()) campo.hidden = true; },
   });
+  if (conf.home) campo.hidden = !ricerche[pagina];
+
+  const lente = conf.home && h('button', {
+    type: 'button', class: 'pulsante-icona', 'aria-label': 'Cerca nel tuo archivio',
+    onclick: () => { campo.hidden = false; campo.focus(); },
+  }, icona('cerca'));
+
   const riepilogo = h('p', { class: 'riepilogo' });
   const contenuto = h('div', { class: 'contenuto' });
-  const el = h('section', { class: 'vista' },
-    intestazione(conf.titolo, conf.secondaria ? { indietro: true } : { impostazioni: true }),
-    riepilogo, campo, contenuto);
+  const el = h('section', { class: 'vista' + (conf.home ? ' home' : '') },
+    intestazione(conf.titolo, conf.secondaria ? { indietro: true } : { impostazioni: true, altri: lente }),
+    !conf.home && riepilogo, campo, contenuto);
 
   function benvenuto() {
     if (!haChiave()) {
@@ -76,6 +89,20 @@ export function vistaElenco(pagina) {
       elenco.length === 1 ? '1 film' : `${elenco.length} film`,
       rivedere ? `${rivedere} da rivedere` : null,
     ].filter(Boolean).join(' · ');
+  }
+
+  // Divisi per priorità: aiuta a scegliere cosa guardare stasera.
+  function perPriorita(elenco) {
+    return archivio.impostazioni().priorita.map(p => {
+      const gruppo = elenco.filter(o => archivio.prioritaDi(o) === p.id).sort(perAggiunta);
+      if (!gruppo.length) return null;
+      return h('div', { class: 'gruppo' },
+        h('h3', { class: 'titolo-gruppo' },
+          h('span', { class: 'pallino', style: { background: p.colore } }),
+          p.nome,
+          h('span', { class: 'conteggio' }, gruppo.length)),
+        griglia(gruppo, { mostraPiattaforme: true }));
+    }).filter(Boolean);
   }
 
   function disegna() {
@@ -104,23 +131,19 @@ export function vistaElenco(pagina) {
       return;
     }
 
-    if (!elenco.length) {
-      contenuto.replaceChildren(vuoto(h('p', null, conf.vuoto)));
+    if (conf.home) {
+      contenuto.replaceChildren(
+        sezioneMensola(disegna),
+        h('section', { class: 'sezione-da-vedere' },
+          h('div', { class: 'testa-sezione' },
+            h('h2', null, 'Da vedere'),
+            elenco.length > 0 && riepilogo),
+          elenco.length ? perPriorita(elenco) : vuoto(h('p', null, conf.vuoto))));
       return;
     }
 
-    if (pagina === 'da-vedere') {
-      // Divisi per priorità: aiuta a scegliere cosa guardare stasera.
-      contenuto.replaceChildren(...archivio.impostazioni().priorita.map(p => {
-        const gruppo = elenco.filter(o => archivio.prioritaDi(o) === p.id).sort(perAggiunta);
-        if (!gruppo.length) return null;
-        return h('div', { class: 'gruppo' },
-          h('h2', { class: 'titolo-gruppo' },
-            h('span', { class: 'pallino', style: { background: p.colore } }),
-            p.nome,
-            h('span', { class: 'conteggio' }, gruppo.length)),
-          griglia(gruppo, { mostraPiattaforme: true }));
-      }).filter(Boolean));
+    if (!elenco.length) {
+      contenuto.replaceChildren(vuoto(h('p', null, conf.vuoto)));
       return;
     }
 
@@ -129,5 +152,19 @@ export function vistaElenco(pagina) {
 
   disegna();
   const stacca = archivio.ascolta(disegna);
-  return { el, smonta: stacca, ricordaScorrimento: true };
+
+  // Ruotando lo schermo (o allargando la finestra) cambia il numero di copertine per ripiano.
+  let colonne = colonneMensola();
+  const alRidimensionamento = () => {
+    if (colonneMensola() === colonne) return;
+    colonne = colonneMensola();
+    disegna();
+  };
+  if (conf.home) window.addEventListener('resize', alRidimensionamento);
+
+  return {
+    el,
+    ricordaScorrimento: true,
+    smonta() { stacca(); window.removeEventListener('resize', alRidimensionamento); },
+  };
 }

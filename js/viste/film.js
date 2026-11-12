@@ -79,9 +79,7 @@ function contenuto(o) {
       : 'Inserisci la chiave TMDb nelle Impostazioni per completare le informazioni.'),
     pannelloAzioni(o),
     o.stato !== 'da-vedere' && sezioneRecensione(o),
-    i.trama && sezione('Trama', h('p', { class: 'trama' },
-      i.tramaLingua === 'en' && h('span', { class: 'lingua', title: 'Trama disponibile solo in inglese' }, 'EN'),
-      i.trama)),
+    sezioneTrama(o),
     i.cast?.length > 0 && sezione('Cast', elencoPersone(i.cast.map(p => ({ ...p, ruolo: p.personaggio })))),
     (regia.length > 0 || musica.length > 0) && sezione('Regia e musica', elencoPersone([
       ...regia.map(p => ({ ...p, ruolo: 'Regia' })),
@@ -90,9 +88,57 @@ function contenuto(o) {
     sezionePiattaforme(o),
     sezioneDettagli(i),
     h('div', { class: 'zona-rimozione' },
+      o.manuale && h('p', { class: 'nota' }, 'Film inserito a mano (non è su TMDb).'),
+      o.manuale && h('a', { class: 'pulsante secondario', href: `#/film/${o.id}/modifica` }, icona('matita'), 'Modifica i dati del film'),
       h('button', { type: 'button', class: 'pulsante-testo pericolo', onclick: () => chiediRimozione(o) },
         'Rimuovi dall\'archivio')),
   ];
+}
+
+// Trama: le lunghe si mostrano accorciate, con "Mostra di più".
+const TRAMA_LUNGA = 260;
+const trameAperte = new Set(); // ricordate finché l'app è aperta
+
+function sezioneTrama(o) {
+  const i = o.info;
+  if (!i.trama) return null;
+  const lunga = i.trama.length > TRAMA_LUNGA;
+  const testo = h('p', { class: 'trama' + (lunga && !trameAperte.has(o.id) ? ' chiusa' : '') },
+    i.tramaLingua === 'en' && h('span', { class: 'lingua', title: 'Trama disponibile solo in inglese' }, 'EN'),
+    i.trama);
+  const pulsante = lunga && h('button', {
+    type: 'button', class: 'pulsante-testo cambia mostra-di-piu',
+    onclick: () => {
+      const apri = !trameAperte.has(o.id);
+      if (apri) trameAperte.add(o.id); else trameAperte.delete(o.id);
+      testo.classList.toggle('chiusa', !apri);
+      pulsante.textContent = apri ? 'Mostra meno' : 'Mostra di più';
+    },
+  }, trameAperte.has(o.id) ? 'Mostra meno' : 'Mostra di più');
+  return sezione('Trama', testo, pulsante);
+}
+
+// La Mensola: un tocco per mettere o togliere (con "Annulla" per i ripensamenti).
+function pulsanteMensola(o) {
+  const sopra = archivio.sullaMensola(o);
+  const metti = () => {
+    if (archivio.mettiSullaMensola(o.id) === 'piena') {
+      avviso(`La Mensola è piena (${archivio.limiteMensola()} film): togline uno per fare posto.`, { azione: { testo: 'Apri', href: '#/' } });
+      return;
+    }
+    avviso(`Sulla Mensola · ${archivio.filmSullaMensola().length} di ${archivio.limiteMensola()}`, { azione: { testo: 'Annulla', fai: () => archivio.togliDallaMensola(o.id) } });
+  };
+  const togli = () => {
+    const posto = o.mensola.posizione;
+    archivio.togliDallaMensola(o.id);
+    avviso('Tolto dalla Mensola', { azione: { testo: 'Annulla', fai: () => archivio.mettiSullaMensola(o.id, posto) } });
+  };
+  return h('button', {
+    type: 'button', class: 'pulsante-mensola' + (sopra ? ' sopra' : ''), 'aria-pressed': String(sopra),
+    onclick: sopra ? togli : metti,
+  }, icona('mensola'),
+  h('span', { class: 'pulsante-stato-testo' }, sopra ? 'Sulla Mensola' : 'Metti sulla Mensola'),
+  h('span', { class: 'cambia' }, sopra ? 'Togli' : ''));
 }
 
 function pannelloAzioni(o) {
@@ -140,6 +186,9 @@ function pannelloAzioni(o) {
         ultima ? 'Modifica' : 'Aggiungi')));
   }
 
+  // Solo i film già visti possono andare sulla Mensola (ma uno che c'è già si può sempre togliere).
+  if (o.stato === 'visto' || o.stato === 'da-rivedere' || archivio.sullaMensola(o)) parti.push(pulsanteMensola(o));
+
   return h('section', { class: 'pannello-azioni' }, ...parti);
 }
 
@@ -172,7 +221,8 @@ function sezionePiattaforme(o) {
   const correggi = h('button', { type: 'button', class: 'pulsante-testo cambia correggi', onclick: () => apriPiattaforme(o.id) },
     icona('matita'), 'Correggi');
   if (!p) {
-    const messaggio = !haChiave() ? 'Serve la chiave TMDb per sapere dove vederlo.'
+    const messaggio = o.manuale ? 'Nessuna piattaforma indicata: puoi aggiungerla tu con «Correggi».'
+      : !haChiave() ? 'Serve la chiave TMDb per sapere dove vederlo.'
       : navigator.onLine === false ? 'Piattaforme non ancora disponibili: sei offline.'
         : 'Sto cercando le piattaforme…';
     return sezione('Dove vederlo', h('p', { class: 'nota' }, messaggio), correggi);
@@ -190,7 +240,7 @@ function sezionePiattaforme(o) {
           h('div', { class: 'etichetta' }, nome),
           h('div', { class: 'piattaforme' }, elenco.map(x => logoPiattaforma(x, { conNome: true })))))
       : h('p', { class: 'nota' }, 'Al momento non risulta disponibile in Italia.'),
-    h('p', { class: 'fonte' },
+    !o.manuale && h('p', { class: 'fonte' },
       'Dati JustWatch',
       p.aggiornateIl && ` · aggiornati il ${formattaData(p.aggiornateIl)}`,
       p.link && [' · ', h('a', { href: p.link, target: '_blank', rel: 'noopener' }, 'dettagli')]),

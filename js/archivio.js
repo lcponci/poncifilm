@@ -173,10 +173,7 @@ function aggiungiVisione(o, data) {
 export function aggiungiFilm(risultato, stato, priorita = null) {
   const id = idFilm(risultato.tmdbId);
   if (archivio.opere[id]) return archivio.opere[id];
-  const ora = adesso();
-  const o = {
-    id,
-    tipo: 'film',
+  return nuovaOpera(id, {
     tmdbId: risultato.tmdbId,
     info: {
       titolo: risultato.titolo,
@@ -189,6 +186,18 @@ export function aggiungiFilm(risultato, stato, priorita = null) {
       tramaLingua: risultato.trama ? 'it' : null,
     },
     infoCompleta: false,
+  }, stato, priorita);
+}
+
+function nuovaOpera(id, { tmdbId, info, infoCompleta, manuale = false }, stato, priorita) {
+  const ora = adesso();
+  const o = {
+    id,
+    tipo: 'film',
+    tmdbId,
+    ...(manuale ? { manuale: true } : {}),
+    info,
+    infoCompleta,
     piattaforme: { auto: null, aggiornateIl: null, aggiunte: [], nascoste: [] },
     stato,
     priorita: priorita || archivio.impostazioni.prioritaPredefinita,
@@ -204,6 +213,107 @@ export function aggiungiFilm(risultato, stato, priorita = null) {
   delete archivio.eliminati[id];
   notifica(id);
   return o;
+}
+
+// ---------------------------------------------------------------- film inseriti a mano
+//
+// Per i film che TMDb non conosce. Non hanno un numero TMDb: le informazioni
+// sono solo quelle scritte da te, e la locandina (se c'è) è una tua foto,
+// salvata dentro l'archivio come immagine piccola.
+
+const elencoNomi = testo => (testo || '').split(',').map(n => n.trim()).filter(Boolean);
+const personaManuale = nome => ({ id: null, nome, foto: null });
+
+function infoManuale(d) {
+  const trama = (d.trama || '').trim() || null;
+  const anno = Number(d.anno) || null;
+  return {
+    titolo: d.titolo.trim(),
+    titoloOriginale: (d.titoloOriginale || '').trim() || null,
+    linguaOriginale: null,
+    dataUscita: null,
+    anno,
+    generi: elencoNomi(d.generi),
+    durata: Number(d.durata) || null,
+    paesi: [],
+    trama,
+    tramaLingua: trama ? 'it' : null,
+    locandina: d.locandina || null,
+    sfondo: null,
+    regia: elencoNomi(d.regia).map(personaManuale),
+    cast: elencoNomi(d.cast).map(nome => ({ ...personaManuale(nome), personaggio: null })),
+    musica: elencoNomi(d.musica).map(personaManuale),
+    collezione: null,
+    imdbId: null,
+    aggiornateIl: adesso(),
+  };
+}
+
+export function aggiungiFilmManuale(dati, stato, priorita = null) {
+  const id = `mano-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  return nuovaOpera(id, { tmdbId: null, info: infoManuale(dati), infoCompleta: true, manuale: true }, stato, priorita);
+}
+
+export function modificaFilmManuale(id, dati) {
+  const o = opera(id);
+  if (!o?.manuale) return;
+  o.info = infoManuale(dati);
+  tocca(o);
+}
+
+// ---------------------------------------------------------------- la Mensola
+//
+// I film "sempre belli, a prescindere da tutto". Pochi, in un ordine scelto da te.
+
+export const LIMITE_MENSOLA = 16;
+export const limiteMensola = () => archivio.impostazioni.mensola?.limite || LIMITE_MENSOLA;
+export const sullaMensola = o => Boolean(o?.mensola?.presente);
+
+export function filmSullaMensola() {
+  return opere().filter(sullaMensola).sort((a, b) =>
+    (a.mensola.posizione ?? Infinity) - (b.mensola.posizione ?? Infinity) || a.info.titolo.localeCompare(b.info.titolo, 'it'));
+}
+
+// Restituisce 'piena' se non c'è più posto, altrimenti null.
+// posizione: per rimetterlo dov'era (con "Annulla"); di solito va in fondo.
+export function mettiSullaMensola(id, posizione = null) {
+  const o = opera(id);
+  if (!o || sullaMensola(o)) return null;
+  const sopra = filmSullaMensola();
+  if (sopra.length >= limiteMensola()) return 'piena';
+  const ultima = sopra.reduce((max, x) => Math.max(max, x.mensola.posizione ?? 0), 0);
+  o.mensola = { presente: true, posizione: posizione ?? ultima + 1 };
+  tocca(o);
+  return null;
+}
+
+export function togliDallaMensola(id) {
+  const o = opera(id);
+  if (!o || !sullaMensola(o)) return;
+  o.mensola = { presente: false, posizione: null };
+  tocca(o);
+}
+
+// Sposta un film di un posto a sinistra (-1) o a destra (+1).
+export function spostaSullaMensola(id, verso) {
+  const elenco = filmSullaMensola();
+  const da = elenco.findIndex(o => o.id === id);
+  const a = da + verso;
+  if (da < 0 || a < 0 || a >= elenco.length) return;
+  [elenco[da], elenco[a]] = [elenco[a], elenco[da]];
+  const ora = adesso();
+  elenco.forEach((o, posizione) => {
+    if (o.mensola.posizione === posizione + 1) return;
+    o.mensola = { presente: true, posizione: posizione + 1 };
+    o.modificatoIl = ora;
+  });
+  notifica(null);
+}
+
+export function impostaLimiteMensola(limite) {
+  const minimo = Math.max(1, filmSullaMensola().length);
+  archivio.impostazioni.mensola = { ...archivio.impostazioni.mensola, limite: Math.max(minimo, Math.min(60, Math.round(limite))) };
+  toccaImpostazioni();
 }
 
 export function modifica(id, cambi) {

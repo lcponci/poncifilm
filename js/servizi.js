@@ -10,7 +10,7 @@ const UN_ORA = 60 * 60 * 1000;
 // (o rimasto incompleto perché aggiunto senza connessione).
 export function completaFilm(id) {
   const o = archivio.opera(id);
-  if (!o || !tmdb.haChiave()) return Promise.resolve();
+  if (!o?.tmdbId || !tmdb.haChiave()) return Promise.resolve(); // i film inseriti a mano non sono su TMDb
   if (inCorso.has(id)) return inCorso.get(id);
 
   const lavoro = tmdb.dettagliFilm(o.tmdbId)
@@ -34,7 +34,7 @@ export async function completaInSospeso() {
 // Aggiorna le piattaforme quando apri la scheda (al massimo una volta l'ora).
 export async function aggiornaPiattaformeFilm(id) {
   const o = archivio.opera(id);
-  if (!o || !tmdb.haChiave()) return;
+  if (!o?.tmdbId || !tmdb.haChiave()) return;
   const ultima = Date.parse(o.piattaforme.aggiornateIl || 0) || 0;
   if (Date.now() - ultima < UN_ORA) return;
   try {

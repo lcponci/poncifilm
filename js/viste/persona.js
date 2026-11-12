@@ -128,7 +128,7 @@ function biografia(p, scelta, ridisegna) {
     lunga && h('button', {
       type: 'button', class: 'pulsante-testo cambia',
       onclick: () => { scelta.bioAperta = !aperta; ridisegna(); },
-    }, aperta ? 'Mostra meno' : 'Leggi tutto'));
+    }, aperta ? 'Mostra meno' : 'Mostra di più'));
 }
 
 const perAnno = (a, b) => (b.dataUscita || '9999').localeCompare(a.dataUscita || '9999'); // i prossimi in cima
