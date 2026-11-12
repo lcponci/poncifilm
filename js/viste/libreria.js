@@ -51,7 +51,7 @@ export function vistaElenco(pagina) {
   const riepilogo = h('p', { class: 'riepilogo' });
   const contenuto = h('div', { class: 'contenuto' });
   const el = h('section', { class: 'vista' },
-    intestazione(conf.titolo, conf.secondaria ? { indietro: '#/impostazioni' } : { impostazioni: true }),
+    intestazione(conf.titolo, conf.secondaria ? { indietro: true } : { impostazioni: true }),
     riepilogo, campo, contenuto);
 
   function benvenuto() {
@@ -59,7 +59,7 @@ export function vistaElenco(pagina) {
       return h('div', { class: 'scheda-info' },
         h('h2', null, 'Benvenuto in PonciFilm'),
         h('p', null, 'Per cercare i film serve una chiave gratuita di TMDb, l\'archivio online da cui arrivano locandine, cast e piattaforme.'),
-        h('a', { class: 'pulsante', href: '#/impostazioni' }, 'Inserisci la chiave'));
+        h('a', { class: 'pulsante', href: '#/impostazioni/tmdb' }, 'Inserisci la chiave'));
     }
     return h('div', { class: 'scheda-info' },
       h('h2', null, 'L\'archivio è vuoto'),

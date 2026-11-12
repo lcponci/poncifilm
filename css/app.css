@@ -705,3 +705,37 @@ textarea.campo.commento { height: auto; min-height: 92px; padding: 12px 14px; li
   .foglio { animation: none; }
   .avvisi { transition: none; }
 }
+
+/* ------------------------------------------------------------- impostazioni (menu) */
+
+.gruppo { margin: 18px 0 0; }
+.gruppo > .etichetta { margin: 0 0 8px 4px; }
+.gruppo-voci { overflow: hidden; border-radius: 14px; background: var(--superficie); }
+.voce {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 0;
+  background: none;
+  font-size: 16px;
+  text-align: left;
+}
+.voce + .voce { position: relative; }
+.voce + .voce::before { content: ''; position: absolute; top: 0; right: 0; left: 56px; border-top: 1px solid var(--bordo); } /* separatore dopo l'icona */
+.voce:active { background: var(--superficie-2); }
+.voce-icona { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 8px; color: #fff; }
+.voce-icona .icona { width: 18px; height: 18px; }
+.voce-titolo { flex: 1; min-width: 0; font-weight: 500; }
+.voce-valore { color: var(--testo-3); font-size: 15px; white-space: nowrap; }
+.voce-valore.errore { color: var(--pericolo); }
+.voce > .icona.freccia { color: var(--testo-3); }
+.impostazioni > .intestazione + .scheda-info { margin-top: 10px; }
+.piede-impostazioni { margin: 28px 4px 0; color: var(--testo-3); font-size: 12px; line-height: 1.5; }
+.piede-impostazioni p { margin: 0 0 8px; }
+.piede-impostazioni a { color: var(--testo-2); text-decoration: underline; }
+.scelta-copia { width: 100%; margin-top: 10px; padding: 14px 16px; justify-content: flex-start; text-align: left; }
+.scelta-copia strong { display: block; font-size: 16px; }
+.scelta-copia .nota { display: block; margin-top: 2px; font-weight: 400; }

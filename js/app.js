@@ -29,6 +29,7 @@ const ROTTE = [
   [/^#\/aggiungi$/, () => vistaAggiungi(), 'aggiungi'],
   [/^#\/film\/([\w-]+)$/, m => vistaFilm(m[1]), voceDelFilm],
   [/^#\/impostazioni$/, () => vistaImpostazioni(), null],
+  [/^#\/impostazioni\/(salvataggio|riconoscimenti|tmdb)$/, m => vistaImpostazioni(m[1]), null],
 ];
 
 let vistaAttuale = null;

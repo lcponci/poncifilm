@@ -65,7 +65,7 @@ export function vistaAggiungi() {
   function disegna() {
     stato.className = 'nota';
     if (!haChiave()) {
-      stato.replaceChildren('Per cercare serve la chiave TMDb. ', h('a', { href: '#/impostazioni' }, 'Inseriscila qui'));
+      stato.replaceChildren('Per cercare serve la chiave TMDb. ', h('a', { href: '#/impostazioni/tmdb' }, 'Inseriscila qui'));
       elenco.replaceChildren();
       return;
     }
