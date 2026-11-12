@@ -39,6 +39,7 @@ const ICONE = {
   casa: '<path d="M4 10.5L12 4l8 6.5V20h-5.5v-5.5h-5V20H4z"/>',
   cerca: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
   avanti: '<path d="M9 6l6 6-6 6"/>',
+  importa: '<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 14v6h14v-6"/>',
   mensola: '<path d="M3 20.5h18"/><rect x="4.5" y="7" width="4" height="13.5" rx=".8"/><rect x="10" y="4.5" width="4" height="16" rx=".8"/><path d="M15.6 8.4l3.6-1 3 12.4-3.6 1z"/>',
   foto: '<rect x="3.5" y="5.5" width="17" height="14" rx="2"/><circle cx="9" cy="10.5" r="1.8"/><path d="M20.5 16l-5-5-9 8.5"/>',
 };

@@ -18,7 +18,7 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - Archiviazione: repository GitHub privato al posto di OneDrive (OneDrive obbligherebbe a riaccedere ogni 24 ore e richiede una registrazione Microsoft incerta). Possibile in futuro un pulsante per salvare una copia anche su OneDrive.
 - Navigazione: barra con **Home**, **+** (grande, al centro) e **Visti**. La Home ha in alto **la Mensola** e sotto i film **Da vedere** (con quelli da rivedere, segnati con ↻), divisi per priorità; la ricerca nell'archivio si apre con la lente. Gli **abbandonati** si raggiungono da Impostazioni (o cercandoli).
 - Mensola: i film «sempre belli, a prescindere da tutto», separati dal voto. Copertine in piedi su ripiani di legno (stile vecchia libreria di Apple Libri), 4 per ripiano sull'iPhone. Limite predefinito 16 (modificabile in Impostazioni, mai sotto il numero di film già presenti). Solo film visti o da rivedere; un tocco nella scheda per mettere/togliere, con «Annulla». «Riordina» mostra frecce e × su ogni copertina.
-- Impostazioni: un menu come quello dell'iPhone (Riconoscimenti, Film abbandonati, Salvataggio online, Scarica una copia, Chiave TMDb), ognuno con il suo stato a destra e una pagina dedicata.
+- Impostazioni: un menu come quello dell'iPhone (Mensola, Riconoscimenti, Film abbandonati, Recensioni da scrivere, Salvataggio online, Scarica una copia, Importa da Notion, Chiave TMDb), ognuno con il suo stato a destra e una pagina dedicata.
 - Aggiunta: la priorità si sceglie subito, con un tocco, nel pannello del film. Anche i film da rivedere hanno una priorità.
 - Scheda film: lo stato è un unico riquadro; toccandolo si apre un pannello con i tre stati (Da vedere, Da rivedere, Visto) e, solo per i primi due, la riga delle priorità. Tornando da vedere/da rivedere si riparte da «Prima o poi». «Abbandonato» è un link discreto in fondo. Tutti i pannelli si chiudono anche trascinandoli in basso. Ordine: trama, cast, regia e musica, dove vederlo, dettagli.
 - Ricerca: ogni risultato mostra anno, regista (chiesto a TMDb subito dopo, per i primi 12) e titolo originale. «titolo anno» (es. «dune 1984») cerca la versione di quell'anno. I risultati sono ordinati per somiglianza al testo scritto (ignorando spazi, accenti e maiuscole) e notorietà; se nulla somiglia, l'app riprova da sola con varianti (spazi mancanti come «laland», ultima parola accorciata per gli errori di battitura).
@@ -32,6 +32,8 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - Piattaforme: aggiornate quando si apre la scheda del film (al massimo una volta l'ora), con correzioni manuali che non vengono sovrascritte.
 - Trama: italiana; se manca, quella inglese segnata «EN»; altrimenti vuota (mai dati inventati). Le trame lunghe si mostrano accorciate, con «Mostra di più».
 - Film inseriti a mano (quando TMDb non lo conosce o non risponde): da «Non lo trovi? Inseriscilo a mano» in Aggiungi. Solo il titolo è obbligatorio; locandina dalle foto, ritagliata 2:3 e ridotta (360×540 JPEG) e salvata nell'archivio. Nessun numero TMDb (id `mano-…`), nessun aggiornamento automatico; si correggono da «Modifica i dati del film».
+- Import da Notion (Impostazioni → Importa da Notion, meglio dal computer): si sceglie il CSV esportato da Notion; l'app legge titolo, stato, priorità, stelle (⭐ → voto), riconoscimenti e commento, e cerca ogni titolo su TMDb (l'anno tra parentesi nel titolo o la data di uscita aiutano). Poi mostra tre gruppi: **Da controllare** (abbinamento incerto, non trovato o doppione), **Pronti** e **Non importati** (le serie TV, per ora). Per ogni riga: Giusto / Cambia (altri risultati, ricerca libera, inserimento a mano) / Non importare. Generi, piattaforme, attori e musica di Notion vengono ignorati: arrivano da TMDb. Nessuna data di visione inventata. Opzione «Prima cancella tutti i film che ci sono ora»: la cancellazione avviene solo alla fine e arriva anche agli altri dispositivi. Il lavoro fatto resta salvato se si esce dalla pagina. Il file di Notion resta solo sul computer (cartella `Ex Notion/`, esclusa da Git).
+- Recensioni da scrivere: i film visti senza voto si recensiscono uno dopo l'altro (Impostazioni → Recensioni da scrivere, voce visibile solo se ce ne sono), con Salta, Avanti e «Non l'ho visto davvero» (lo sposta tra i da vedere).
 
 ## Fasi
 
@@ -41,7 +43,7 @@ Le informazioni sui film arrivano da TMDb; i dati personali restano tuoi.
 - [x] **3 – Solidità**: sincronizzazione con il repository privato, esportazione CSV.
 - [x] **4 – Persone**: schede di attori, registi e compositori; ricerca per autore.
 - [x] **Mensola** (anticipata): nuova Home, ripiani, riordino, limite. Più film inseriti a mano e trama accorciata.
-- [ ] **5 – Import da Notion** (CSV).
+- [x] **5 – Import da Notion** (CSV): strumento di importazione con revisione dei casi dubbi; «Recensioni da scrivere».
 - [ ] Dopo: filtri e statistiche, serie TV, cortometraggi.
 
 ## Provare sul computer
@@ -67,5 +69,6 @@ poi aprire <http://localhost:8000> nel browser. Sul computer locale la copia off
 | `js/tmdb.js`, `js/servizi.js` | Collegamento a TMDb e aggiornamenti automatici |
 | `js/sincronizzazione.js` | Salvataggio online nel repository GitHub privato |
 | `js/esporta.js` | Copie scaricabili (JSON e CSV) |
-| `js/viste/` | Le schermate: libreria (Home, Visti), mensola, aggiungi, film, film a mano, persona, impostazioni |
+| `js/notion.js` | Lettura del CSV di Notion |
+| `js/viste/` | Le schermate: libreria (Home, Visti), mensola, aggiungi, film, film a mano, persona, impostazioni, importa, recensioni da scrivere |
 | `strumenti/` | Generatore delle icone e controlli |

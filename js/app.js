@@ -11,6 +11,8 @@ import { vistaFilm } from './viste/film.js';
 import { vistaImpostazioni } from './viste/impostazioni.js';
 import { vistaPersona } from './viste/persona.js';
 import { vistaFilmManuale } from './viste/manuale.js';
+import { vistaImporta } from './viste/importa.js';
+import { vistaRecensioni } from './viste/recensioni.js';
 
 const contenitore = document.getElementById('vista');
 
@@ -34,6 +36,8 @@ const ROTTE = [
   [/^#\/film\/([\w-]+)$/, m => vistaFilm(m[1]), voceDelFilm],
   [/^#\/persona\/(\d+)$/, m => vistaPersona(m[1]), null],
   [/^#\/impostazioni$/, () => vistaImpostazioni(), null],
+  [/^#\/importa$/, () => vistaImporta(), null],
+  [/^#\/recensioni$/, () => vistaRecensioni(), null],
   [/^#\/impostazioni\/(salvataggio|riconoscimenti|tmdb)$/, m => vistaImpostazioni(m[1]), null],
 ];
 

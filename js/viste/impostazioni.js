@@ -14,6 +14,7 @@ import { completaInSospeso } from '../servizi.js';
 import * as sincro from '../sincronizzazione.js';
 import { esportaJson, esportaCsv } from '../esporta.js';
 import { VERSIONE_APP } from '../versione.js';
+import { senzaRecensione } from './recensioni.js';
 
 export function vistaImpostazioni(sezione = null) {
   if (sezione === 'salvataggio') return paginaSalvataggio();
@@ -59,6 +60,7 @@ function paginaPrincipale() {
   const opere = archivio.opere();
   const abbandonati = opere.filter(o => o.stato === 'abbandonato').length;
   const riconoscimenti = archivio.impostazioni().riconoscimenti.length;
+  const daRecensire = opere.filter(senzaRecensione).length;
 
   const valoreSalvataggio = valore('');
   const aggiornaSalvataggio = st => {
@@ -86,10 +88,12 @@ function paginaPrincipale() {
     gruppo('La tua cineteca',
       voce({ simbolo: 'mensola', colore: '#8a5a3c', titolo: 'Mensola', valore: valoreMensola, onclick: () => apriLimiteMensola(aggiornaMensola) }),
       voce({ simbolo: 'medaglia', colore: '#d9822b', titolo: 'Riconoscimenti', valore: valore(String(riconoscimenti)), href: '#/impostazioni/riconoscimenti' }),
-      voce({ simbolo: 'chiudi', colore: '#5b6069', titolo: 'Film abbandonati', valore: valore(String(abbandonati)), href: '#/abbandonati' })),
+      voce({ simbolo: 'chiudi', colore: '#5b6069', titolo: 'Film abbandonati', valore: valore(String(abbandonati)), href: '#/abbandonati' }),
+      daRecensire > 0 && voce({ simbolo: 'matita', colore: '#c0504d', titolo: 'Recensioni da scrivere', valore: valore(String(daRecensire)), href: '#/recensioni' })),
     gruppo('I tuoi dati',
       voce({ simbolo: 'nuvola', colore: '#3478f6', titolo: 'Salvataggio online', valore: valoreSalvataggio, href: '#/impostazioni/salvataggio' }),
-      voce({ simbolo: 'scarica', colore: '#30a14e', titolo: 'Scarica una copia', onclick: apriScaricaCopia })),
+      voce({ simbolo: 'scarica', colore: '#30a14e', titolo: 'Scarica una copia', onclick: apriScaricaCopia }),
+      voce({ simbolo: 'importa', colore: '#6b6f78', titolo: 'Importa da Notion', href: '#/importa' })),
     gruppo('Servizi',
       voce({ simbolo: 'chiave', colore: '#0d8fb8', titolo: 'Chiave TMDb', valore: valore(haChiave() ? 'Attiva' : 'Da inserire'), href: '#/impostazioni/tmdb' })),
     h('footer', { class: 'piede-impostazioni' },

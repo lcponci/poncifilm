@@ -136,6 +136,10 @@ function compatto(testo) {
   return (testo || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+// Quanto un risultato somiglia al testo scritto (da 0 a 1): serve all'importazione
+// per capire se un abbinamento è sicuro.
+export const somiglianzaCon = (testo, r) => somiglianza(compatto(testo), r);
+
 // Da 0 (niente a che vedere) a 1 (identico), confrontando sia il titolo
 // italiano sia quello originale.
 function somiglianza(scritto, r) {

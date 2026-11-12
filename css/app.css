@@ -1005,3 +1005,49 @@ a.libro:active { transform: translateY(-3px) scale(.98); }
 .pulsante-icona.grande { width: 52px; height: 52px; background: var(--superficie-2); color: var(--testo); font-size: 26px; font-weight: 500; }
 .contatore-grande { min-width: 64px; font-size: 40px; font-weight: 800; text-align: center; }
 .nota.centrata { text-align: center; }
+
+/* ------------------------------------------------------------- importazione da Notion */
+
+.barra-avanzamento { height: 8px; overflow: hidden; border-radius: 999px; background: var(--superficie-2); margin: 10px 0; }
+.barra-avanzamento > span { display: block; height: 100%; border-radius: inherit; background: var(--accento); transition: width .3s; }
+.casella-riga { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; font-size: 14px; color: var(--testo-2); }
+.casella-riga input { flex: none; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accento); }
+.importa .scheda-info .pulsante-testo { display: block; margin: 8px auto 0; }
+.riepilogo-import { margin: 12px 0 4px; }
+.riepilogo-import .pillola { cursor: default; }
+.sezione-import { margin-top: 26px; }
+.sezione-import > h2 { margin-bottom: 6px; font-size: 20px; font-weight: 800; }
+.sezione-import > .nota { margin: 0 0 12px; }
+.riga-import { padding: 14px 0; border-bottom: 1px solid var(--bordo); }
+.riga-import.da-controllare { margin: 0 -10px; padding: 14px 10px; border: 0; border-radius: var(--raggio); background: var(--superficie); }
+.riga-import.da-controllare + .riga-import.da-controllare { margin-top: 10px; }
+.import-notion { display: flex; flex-direction: column; gap: 1px; margin-bottom: 10px; }
+.import-notion .etichetta { margin: 0; font-size: 10px; }
+.import-titolo { font-weight: 700; }
+.import-notion .nota { font-size: 13px; }
+.import-tmdb { display: flex; align-items: center; gap: 12px; }
+.import-esito { display: flex; align-items: center; gap: 8px; color: var(--testo-2); font-size: 14px; }
+.import-esito .icona { width: 18px; height: 18px; }
+.import-tmdb .nota.errore { margin-top: 4px; font-size: 13px; }
+.import-azioni { display: flex; gap: 10px; margin-top: 12px; }
+.import-azioni .pulsante { flex: 1; min-height: 42px; }
+.import-azioni .pulsante-testo { padding: 0; }
+.zona-importa { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--bordo); text-align: center; }
+.zona-importa .nota { margin: 0 0 12px; text-align: left; }
+.elenco-esclusi { margin: 0; padding-left: 18px; color: var(--testo-2); font-size: 14px; }
+.elenco-esclusi li { margin-bottom: 4px; }
+.elenco-esclusi strong { color: var(--testo); font-weight: 600; }
+.riga-risultato.attuale { box-shadow: inset 3px 0 0 var(--accento); padding-left: 10px; }
+.foglio-scelta-import .riga-aggiungi { margin: 4px 0 6px; }
+.foglio-scelta-import .riga-aggiungi .campo { flex: 1; min-width: 0; }
+.foglio-scelta-import .azioni.due { margin-top: 16px; }
+
+/* ------------------------------------------------------------- recensioni da scrivere */
+
+.avanzamento-recensioni { margin: 4px 0 14px; }
+.avanzamento-recensioni .barra-avanzamento { margin: 6px 0 0; }
+.recensione-testa { display: flex; align-items: flex-end; gap: 14px; margin-bottom: 16px; }
+.recensione-testa .film-locandina { width: 96px; }
+.recensione-testa h2 { font-size: 22px; font-weight: 800; }
+.recensione-testa .cambia { display: inline-block; padding: 6px 0 0; }
+.recensioni .azioni.due { margin-top: 4px; }

@@ -173,25 +173,34 @@ function aggiungiVisione(o, data) {
 export function aggiungiFilm(risultato, stato, priorita = null) {
   const id = idFilm(risultato.tmdbId);
   if (archivio.opere[id]) return archivio.opere[id];
-  return nuovaOpera(id, {
-    tmdbId: risultato.tmdbId,
-    info: {
-      titolo: risultato.titolo,
-      titoloOriginale: risultato.titoloOriginale,
-      anno: risultato.anno,
-      dataUscita: risultato.dataUscita,
-      locandina: risultato.locandina,
-      sfondo: risultato.sfondo,
-      trama: risultato.trama,
-      tramaLingua: risultato.trama ? 'it' : null,
-    },
-    infoCompleta: false,
-  }, stato, priorita);
+  return nuovaOpera(id, { tmdbId: risultato.tmdbId, info: infoDaRisultato(risultato), infoCompleta: false }, stato, priorita);
 }
 
-function nuovaOpera(id, { tmdbId, info, infoCompleta, manuale = false }, stato, priorita) {
+// Le prime informazioni, quelle che arrivano con la ricerca; le altre si scaricano dopo.
+function infoDaRisultato(risultato) {
+  return {
+    titolo: risultato.titolo,
+    titoloOriginale: risultato.titoloOriginale,
+    anno: risultato.anno,
+    dataUscita: risultato.dataUscita,
+    locandina: risultato.locandina,
+    sfondo: risultato.sfondo,
+    trama: risultato.trama,
+    tramaLingua: risultato.trama ? 'it' : null,
+  };
+}
+
+function nuovaOpera(id, dati, stato, priorita) {
+  const o = costruisciOpera(id, dati, stato, priorita);
+  archivio.opere[id] = o;
+  delete archivio.eliminati[id];
+  notifica(id);
+  return o;
+}
+
+function costruisciOpera(id, { tmdbId, info, infoCompleta, manuale = false }, stato, priorita) {
   const ora = adesso();
-  const o = {
+  return {
     id,
     tipo: 'film',
     tmdbId,
@@ -209,10 +218,46 @@ function nuovaOpera(id, { tmdbId, info, infoCompleta, manuale = false }, stato, 
     aggiuntoIl: ora,
     modificatoIl: ora,
   };
-  archivio.opere[id] = o;
-  delete archivio.eliminati[id];
-  notifica(id);
-  return o;
+}
+
+// ---------------------------------------------------------------- importazione e svuotamento
+
+// Cancella tutti i film. Ogni film lascia un "segno di eliminazione", così la
+// cancellazione arriva anche agli altri dispositivi con la sincronizzazione.
+// Impostazioni (riconoscimenti, Mensola, …) restano come sono.
+export function svuotaArchivio() {
+  const ora = adesso();
+  for (const id of Object.keys(archivio.opere)) archivio.eliminati[id] = ora;
+  archivio.opere = {};
+  notifica(null);
+}
+
+// Aggiunge molti film in una volta (dall'importazione), con i tuoi dati personali.
+// voci: [{ risultato (da TMDb) | manuale: { titolo, anno }, stato, priorita, voto, riconoscimenti, commento }]
+// Nessuna data di visione inventata: se non la conosci, resta vuota.
+// Restituisce quanti film sono stati aggiunti (quelli già presenti si saltano).
+export function importaFilm(voci) {
+  const base = Date.now();
+  let aggiunti = 0;
+  voci.forEach((v, n) => {
+    const id = v.manuale ? nuovoIdManuale() : idFilm(v.risultato.tmdbId);
+    if (archivio.opere[id]) return;
+    const dati = v.manuale
+      ? { tmdbId: null, info: infoManuale({ titolo: v.manuale.titolo, anno: v.manuale.anno }), infoCompleta: true, manuale: true }
+      : { tmdbId: v.risultato.tmdbId, info: infoDaRisultato(v.risultato), infoCompleta: false };
+    const o = costruisciOpera(id, dati, v.stato, v.priorita);
+    o.voto = v.voto || null;
+    o.riconoscimenti = v.riconoscimenti || [];
+    o.commento = v.commento || '';
+    o.visioni = [];
+    // Stesso ordine del file: il primo risulta aggiunto per ultimo (in cima alle liste).
+    o.aggiuntoIl = new Date(base - n * 1000).toISOString();
+    archivio.opere[id] = o;
+    delete archivio.eliminati[id];
+    aggiunti++;
+  });
+  notifica(null);
+  return aggiunti;
 }
 
 // ---------------------------------------------------------------- film inseriti a mano
@@ -249,9 +294,10 @@ function infoManuale(d) {
   };
 }
 
+const nuovoIdManuale = () => `mano-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
 export function aggiungiFilmManuale(dati, stato, priorita = null) {
-  const id = `mano-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-  return nuovaOpera(id, { tmdbId: null, info: infoManuale(dati), infoCompleta: true, manuale: true }, stato, priorita);
+  return nuovaOpera(nuovoIdManuale(), { tmdbId: null, info: infoManuale(dati), infoCompleta: true, manuale: true }, stato, priorita);
 }
 
 export function modificaFilmManuale(id, dati) {
